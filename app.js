@@ -1,5 +1,7 @@
-const express = require("express");
-const morgan = require("morgan");
+import express from"express";
+import morgan from"morgan";
+import categoriesRouter from "./Routes/categoryRoutes.js";
+import {errorHandler} from "./Middelwares/categoryMiddleWare.js";
 
 const app = express();
 
@@ -10,6 +12,8 @@ if (process.env.NODE_ENV === "development") {
 
 // parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
 app.use(express.json());
+app.use("/categories", categoriesRouter);
+app.use(errorHandler);
 
 
 
@@ -20,4 +24,4 @@ app.use((req, res, next) => {
 });
 
 
-module.exports = app;
+export default app;
