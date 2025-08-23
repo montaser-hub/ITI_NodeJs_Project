@@ -1,5 +1,5 @@
-import {cartModel} from "../Models/cartModel.js";
-import Product from "../Models/productModel.js";
+import cartModel from "../Models/cartModel.js";
+import ProductModel from "../Models/productModel.js";
 // Add Product To Cart
 const addProductToCart = async (req, res) => {
     try {
@@ -8,7 +8,7 @@ const addProductToCart = async (req, res) => {
         let quantity = Number(req.body.quantity);
         if (!userId || !productId) {return res.status(400).json({ message: "UserId and productId are required" });}
         if (!quantity || !Number.isFinite(quantity) || quantity <= 0) {quantity = 1;}
-        const product = await Product.findById(productId);
+        const product = await ProductModel.findById(productId);
         if (!product) {return res.status(404).json({ message: "Product not found" });}
         let cart = await cartModel.findOne({ userId });
         if (!cart) {
@@ -29,7 +29,7 @@ const addProductToCart = async (req, res) => {
 const updateProductQuantity = async (req, res) => {
     try {
         const userId = req.params.userId;
-        const productId = req.params.id;
+        const productId = req.params.itemId;
         let quantity = Number(req.body.quantity);
         if (!userId || !productId) {return res.status(400).json({ message: "UserId and productId are required" });}
         if (!quantity || !Number.isFinite(quantity) || quantity <= 0) {return res.status(400).json({ message: "Quantity must be a positive number" });}
@@ -47,7 +47,7 @@ const updateProductQuantity = async (req, res) => {
 const removeProductFromCart = async (req, res) => {
     try {
         const userId = req.params.userId;
-        const productId = req.params.id;
+        const productId = req.params.itemId;
         if (!userId || !productId) {return res.status(400).json({ message: "UserId and ProductId are required." });}
         let cart = await cartModel.findOne({ userId });
         if (!cart) {return res.status(404).json({ message: "User don't have a Cart." });}
