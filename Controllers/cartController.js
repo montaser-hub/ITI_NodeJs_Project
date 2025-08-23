@@ -18,10 +18,8 @@ const addProductToCart = async (req, res) => {
             return res.status(201).json({ message: "Product added to a new cart successfully.", cart });
         }
         const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId.toString());
-        if (itemIndex > -1) {
-            cart.items[itemIndex].quantity += quantity;
-        } else {cart.items.push({productId, quantity, priceAtTime: product.price});
-              }
+        if (itemIndex > -1) {cart.items[itemIndex].quantity += quantity;}
+        else {cart.items.push({productId, quantity, priceAtTime: product.price});}
         cart.totalPrice = cart.items.reduce((acc, item) => acc + (item.priceAtTime * item.quantity), 0);
         await cart.save();
         return res.status(200).json({ message: "Cart updated successfully.", cart });
