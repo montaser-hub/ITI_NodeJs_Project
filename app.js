@@ -1,5 +1,5 @@
-const express = require("express");
-const morgan = require("morgan");
+import express from "express";
+import morgan from "morgan";
 
 const app = express();
 
@@ -11,13 +11,9 @@ if (process.env.NODE_ENV === "development") {
 // parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
 app.use(express.json());
 
-
-
-
 app.use((req, res, next) => {
   console.log("Hello from the MIDDLEWARE :eight_spoked_asterisk:");
   next();
 });
 
-
-module.exports = app;
+export default app;
