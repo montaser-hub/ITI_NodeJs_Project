@@ -76,9 +76,10 @@ const orderSchema = new mongoose.Schema(
 // Before saving the order, calculate the total price = Sum of (Price x Quantity) + Shipping Price
 orderSchema.pre("save", function (next) {
   if (this.cartItems?.length) {
-    const subtotal = this.cartItems.reduce((sum, i) => {
-      sum + i.price * i.quantity, 0;
-    });
+    const subtotal = this.cartItems.reduce(
+      (sum, i) => sum + i.price * i.quantity,
+      0
+    );
     this.totalOrderPrice = subtotal + this.shippingPrice;
   }
   next();
