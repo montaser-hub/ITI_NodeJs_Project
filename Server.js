@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const dotenv = require("dotenv");
+import dotenv from "dotenv";
 
 //Uncaught exceptions
 process.on("uncaughtException", (err) => {
@@ -9,8 +9,7 @@ process.on("uncaughtException", (err) => {
 });
 
 dotenv.config({ path: "./config.env" });
-const app = require("./app");
-
+import app from "./app.js";
 // 4) START THE SERVER
 
 const DB = process.env.DATABASE.replace(
