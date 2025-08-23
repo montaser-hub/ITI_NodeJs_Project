@@ -20,10 +20,19 @@
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
     "joi": "^18.0.1",
-    "mongoose": "^8.17.2",
+    "mongoose": "^8.18.0",
     "morgan": "^1.10.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/montaser-hub/ITI_NodeJs_Project.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/montaser-hub/ITI_NodeJs_Project/issues"
+  },
+  "homepage": "https://github.com/montaser-hub/ITI_NodeJs_Project#readme"
 }
