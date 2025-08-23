@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const dotenv = require("dotenv");
+import dotenv from "dotenv";
 
 //Uncaught exceptions
 process.on("uncaughtException", (err) => {
@@ -9,8 +9,7 @@ process.on("uncaughtException", (err) => {
 });
 
 dotenv.config({ path: "./config.env" });
-const app = require("./app");
-
+import app from "./app.js";
 // 4) START THE SERVER
 
 const DB = process.env.DATABASE.replace(
@@ -25,12 +24,12 @@ mongoose
 
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
-  console.log(`Server running on port ${port}...`);
+  console.log(`Server running on port ${port}...`)
 });
 //Unhandled promise rejection is handled here
 process.on("unhandledRejection", (err) => {
   console.log(err.name, err.message);
-  console.log("UNHANDLED REJECTION! 💥 shutting down...");
+  console.log("UNHANDLED REJECTION!  shutting down...");
   server.close(() => {
     process.exit(1);
   });

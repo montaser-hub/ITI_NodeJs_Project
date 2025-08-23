@@ -1,5 +1,5 @@
-const express = require("express");
-const morgan = require("morgan");
+import express from"express";
+import morgan from"morgan";
 
 const app = express();
 
@@ -20,4 +20,4 @@ app.use((req, res, next) => {
 });
 
 
-module.exports = app;
+export default app;
