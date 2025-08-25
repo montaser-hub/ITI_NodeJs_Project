@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { categoryValidationSchema } from "../Utils/Validation/categoryValidation.js";
+import  categoryModel  from "../Models/categoryModel.js";
 
 // Moved isValidId here for centralized use
 export const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -25,7 +26,7 @@ export const validateCategory = async (req, res, next) => {
         });
     }
     // const { name } = req.body;
-    // const existingCategory = await mongoose.model("category").findOne({ name }).lean();
+    // const existingCategory = await categoryModel.findOne({ name }) // .lean();
     // if (existingCategory) {
     //     return res.status(400).json({
     //         success: false,

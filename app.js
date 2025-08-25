@@ -13,7 +13,6 @@ if (process.env.NODE_ENV === "development") {
 // parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
 app.use(express.json());
 app.use("/categories", categoriesRouter);
-app.use(errorHandler);
 
 
 
@@ -22,6 +21,8 @@ app.use((req, res, next) => {
   console.log("Hello from the MIDDLEWARE :eight_spoked_asterisk:");
   next();
 });
+app.use(errorHandler);
+
 
 
 export default app;

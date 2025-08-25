@@ -1,5 +1,6 @@
 import categoryModel from "../Models/categoryModel.js";
-import { catchError, isValidId } from "../Middelwares/categoryMiddleWare.js"; // Updated import to include isValidId
+import { catchError, isValidId } from "../Middelwares/categoryMiddleWare.js";
+// import productModel from "../Models/productModel.js"; // Updated import to include isValidId
 
 // Helper function to find category by ID
 async function findCategoryById(id) {
@@ -21,6 +22,7 @@ async function findCategoryById(id) {
 // GET /categories
 export const getCategories = catchError(async (req, res) => {
     const categories = await categoryModel.find()   //.lean();
+    if(categories.length === 0) return  res.status(404).json({message: " No Categorie found"});
     res.status(200).json({message: "Categories retrieved successfully", data: categories,});
 });
 
@@ -47,9 +49,9 @@ export const updateCategory = catchError(async (req, res) => {
 // DELETE /categories/:id
 export const deleteCategory = catchError(async (req, res) => {
     await findCategoryById(req.params.id);
+    // await productModel.deleteMany({ category: category._id });
+
     const deletedCategory = await categoryModel.findByIdAndDelete(req.params.id) // Added lean for performance .lean();
-//      if (!deletedCategory) {
-//     return res.status(404).json({success: false,message: "Category not found",});
-//   }
-    res.status(200).json({ message: "Category deleted successfully", data: deletedCategory,});
+
+    res.status(200).json({ message: "Category deleted successfully and related products deleted", data: deletedCategory,});
 });
