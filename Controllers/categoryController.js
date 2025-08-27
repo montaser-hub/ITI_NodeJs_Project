@@ -1,6 +1,6 @@
 import categoryModel from "../Models/categoryModel.js";
 import  catchError  from "../Middelwares/catchAsync.js";
-// import productModel from "../Models/productModel.js"; // Updated import to include isValidId
+import productModel from "../Models/productModel.js"; 
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
 
@@ -67,7 +67,7 @@ export const updateCategory = catchError(async (req, res) => {
 // DELETE /categories/:id
 export const deleteCategory = catchError(async (req, res) => {
     await findCategoryById(req.params.id);
-    // await productModel.deleteMany({ category: category._id });
+    await productModel.deleteMany({ category: category._id });
 
     const deletedCategory = await categoryModel.findByIdAndDelete(req.params.id) // Added lean for performance .lean();
 
