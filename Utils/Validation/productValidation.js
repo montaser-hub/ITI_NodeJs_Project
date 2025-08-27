@@ -1,5 +1,6 @@
 import Joi from "joi";
 
+
 const productValidationSchema = Joi.object({
   name: Joi.string().min(3).max(30).required().messages({
     "string.empty": "Name cannot be empty",
@@ -27,7 +28,7 @@ const productValidationSchema = Joi.object({
     "any.required": "Quantity is required",
   }),
 
-  category: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required().messages({
+  categoryId: Joi.string().required().messages({
     "string.pattern.base": "Category must be a valid ObjectId",
     "any.required": "Category is required",
   }),
@@ -37,7 +38,7 @@ const productValidationSchema = Joi.object({
     "any.required": "Images are required",
   }),
 
-  addedBy: Joi.string().regex(/^[0-9a-fA-F]{24}$/).messages({
+  addedBy: Joi.string().messages({
     "string.pattern.base": "addedBy must be a valid ObjectId",
   }),
 });
