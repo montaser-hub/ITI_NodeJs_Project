@@ -1,6 +1,8 @@
 import categoryModel from "../Models/categoryModel.js";
 import  catchError  from "../Middelwares/catchAsync.js";
 // import productModel from "../Models/productModel.js"; // Updated import to include isValidId
+import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
+
 
 // Helper function to find category by ID
 async function findCategoryById(id) {
@@ -16,9 +18,30 @@ async function findCategoryById(id) {
 
 // GET /categories
 export const getCategories = catchError(async (req, res) => {
-    const categories = await categoryModel.find()   //.lean();
-    if(!categories) return  res.status(404).json({message: " No Categorie found"});
-    res.status(200).json({message: "Categories retrieved successfully", data: categories,});
+  const query = req.query;
+  const filter = filterQuery(query);      
+  const { skip, limit } = paginateQuery(query); 
+  const sort = sortQuery(query);       
+
+  const categories = await categoryModel
+    .find(filter)
+    .skip(skip)
+    .limit(limit)
+    .sort(sort);
+
+  const total = await categoryModel.countDocuments(filter);
+
+  if (!categories || categories.length === 0) {
+    return res.status(404).json({ message: "No categories found" });
+  }
+
+  res.status(200).json({
+    message: "Categories retrieved successfully",
+    total,
+    page: query.page,
+    limit: query.limit,
+    data: categories,
+  });
 });
 
 // GET /categories/:id
