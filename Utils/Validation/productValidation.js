@@ -36,11 +36,7 @@ const productValidationSchema = Joi.object({
   images: Joi.array().items(Joi.string()).min(1).required().messages({
     "array.min": "Images must contain at least one image",
     "any.required": "Images are required",
-  }),
-
-  addedBy: objectIdSchema.messages({
-    "string.pattern.base": "addedBy must be a valid ObjectId",
-  }),
+  })
 });
 
 export default productValidationSchema;
