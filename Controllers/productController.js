@@ -1,21 +1,25 @@
 // TODO:Hager
 import catchError from "../Middelwares/catchAsync.js";
 import ProductModel from "../Models/productModel.js";
+import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
+
 
 // Get products with pagination
 const getProducts = catchError(async (req, res) => {
     // pagination params
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10; // default 10
-    const skip = (page - 1) * limit;
+    const query = req.query;
+    const filter = filterQuery(query);
+    const { skip, limit } = paginateQuery(query);
+    const sort = sortQuery(query);
 
-    const products = await ProductModel.find()
-      .populate("category", "name")
-      .populate("user", "name email")
+    const products = await ProductModel.find(filter)
+      .populate("categoryId", "name")
+      .populate("addedBy", "name email role")
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .sort(sort);
 
-    const totalProducts = await ProductModel.countDocuments();
+    const totalProducts = await ProductModel.countDocuments(filter);
    
 
     res.json({

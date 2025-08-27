@@ -37,7 +37,7 @@ export const getAllUsers = catchAsync(async (req, res) => {
   const { skip, limit } = paginateQuery(query);
   const sort = sortQuery(query);
 
-  const users = await User.find().skip(skip).limit(limit).sort(sort); //{name:montaser,age:29}
+  const users = await User.find(filter).skip(skip).limit(limit).sort(sort); //{name:montaser,age:29}
 
   const total = await User.countDocuments(filter);
 

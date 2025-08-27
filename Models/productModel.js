@@ -25,10 +25,9 @@ const productSchema = new mongoose.Schema({
         min: 0
     },
     categoryId: {
-        type:String
-        // type: mongoose.Types.ObjectId,
-        // ref: "Category",
-        // required: true
+        type: mongoose.Types.ObjectId,
+        ref: "Category",
+        required: true
     },  
     images: {
         type: [String],
@@ -37,7 +36,7 @@ const productSchema = new mongoose.Schema({
     addedBy: {
         type: mongoose.Types.ObjectId,
         ref: "User",
-        // required: true
+        required: true
     }
 }, { 
     versionKey: false, 

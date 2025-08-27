@@ -1,5 +1,5 @@
 import Joi from "joi";
-
+import objectIdSchema from "../../schema.js";
 
 const productValidationSchema = Joi.object({
   name: Joi.string().min(3).max(30).required().messages({
@@ -28,7 +28,7 @@ const productValidationSchema = Joi.object({
     "any.required": "Quantity is required",
   }),
 
-  categoryId: Joi.string().required().messages({
+  categoryId: objectIdSchema.required().messages({
     "string.pattern.base": "Category must be a valid ObjectId",
     "any.required": "Category is required",
   }),
@@ -38,7 +38,7 @@ const productValidationSchema = Joi.object({
     "any.required": "Images are required",
   }),
 
-  addedBy: Joi.string().messages({
+  addedBy: objectIdSchema.messages({
     "string.pattern.base": "addedBy must be a valid ObjectId",
   }),
 });

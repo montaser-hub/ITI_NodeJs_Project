@@ -14,13 +14,13 @@ const productRouter = express.Router();
 
 
 productRouter
-  .route("/product")
+  .route("/products")
   .get(protect , getProducts)
   .post(protect, restrictTo("admin"), validationMiddleware(productValidationSchema), createProduct);
 
 
 productRouter
-  .route("/product/:id")
+  .route("/products/:id")
   .get(protect , getProductById)
   .put(protect, restrictTo("admin"), validationMiddleware(productValidationSchema), updateProduct)
   .delete(protect, restrictTo("admin"), deleteProduct);
