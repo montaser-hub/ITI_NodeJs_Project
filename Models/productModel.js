@@ -25,18 +25,19 @@ const productSchema = new mongoose.Schema({
         min: 0
     },
     category: {
-        type: mongoose.Types.ObjectId,
-        ref: "Category",
-        required: true
+        type:String
+        // type: mongoose.Types.ObjectId,
+        // ref: "Category",
+        // required: true
     },  
     images: {
         type: [String],
         required: true,
     },
-    user: {
+    addedBy: {
         type: mongoose.Types.ObjectId,
-        ref: "User", // الأدمن اللي ضاف المنتج
-        required: true
+        ref: "User",
+        // required: true
     }
 }, { 
     versionKey: false, 

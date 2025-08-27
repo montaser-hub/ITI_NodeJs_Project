@@ -1,6 +1,6 @@
 import express from"express";
 import morgan from"morgan";
-
+import productRouter from "./Routes/productRoutes.js";
 const app = express();
 
 // logging middleware in development environment
@@ -12,7 +12,7 @@ if (process.env.NODE_ENV === "development") {
 app.use(express.json());
 
 
-
+app.use("/", productRouter); 
 
 app.use((req, res, next) => {
   console.log("Hello from the MIDDLEWARE :eight_spoked_asterisk:");
