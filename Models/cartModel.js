@@ -47,18 +47,8 @@ const cartSchema = new mongoose.Schema(
         versionKey: false
     });
 
-// cartSchema.pre("validate", function (next) {
-//     if (this.items && this.items.length > 0) {
-//         this.items.forEach(item => {
-//             item.subTotal = item.priceAtTime * item.quantity;
-//         });
-//         this.totalPrice = this.items.reduce((sum, item) => sum + item.subTotal, 0);
-//     } else {
-//         this.totalPrice = 0;
-//     }
-//     next();
-// });
-cartSchema.pre("validate", function (next) {
+
+cartSchema.pre("save", function (next) {
     if (this.items && this.items.length > 0) {
         this.items.forEach(item => {
             const price = item.priceAtTime || 0;
