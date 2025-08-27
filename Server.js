@@ -10,6 +10,7 @@ process.on("uncaughtException", (err) => {
 
 dotenv.config({ path: "./config.env" });
 import app from "./app.js";
+
 // 4) START THE SERVER
 
 const DB = process.env.DATABASE.replace(
