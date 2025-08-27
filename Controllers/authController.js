@@ -69,7 +69,7 @@ export const login = catchAsync( async ( req, res, next ) => {
   //2) Check if user exists && password is correct
   const user = await User.findOne( { email } ).select("+password"); //to select the password field which has select: false in userModel
   //3) check if user is confirmed
-  if (!user.isConfirmed) {
+  if (!user || !user?.isConfirmed) {
     return res.status(403).json({ message: "Please verify your account" });
   }
   //4) check if user is active
