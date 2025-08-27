@@ -1,5 +1,6 @@
 import Joi from "joi";
 
+
 export const categoryValidationSchema = Joi.object({
   name: Joi.string().min(3).max(50).required().messages({
     "string.empty": "Category name is required",

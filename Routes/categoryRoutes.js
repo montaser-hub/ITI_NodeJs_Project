@@ -1,12 +1,15 @@
 import express from "express";
 import { getCategories, createCategory, updateCategory, deleteCategory, getCategory } from "../Controllers/categoryController.js";
+import { protect, restrictTo } from "../Controllers/authController.js";
+import validationMiddleware from "../Middelwares/validation.js";
+import categoryValidationSchema from "../Utils/Validation/categoryValidation.js"; 
 const categoriesRouter = express.Router();
 
 
 
 
 
-categoriesRouter.route("/").get(getCategories).post( createCategory);
-categoriesRouter.route("/:id").get( getCategory).put(  updateCategory).delete( deleteCategory);
+categoriesRouter.route("/categories/").get(protect, restrictTo("admin"), getCategories).post(protect, restrictTo("admin"), validationMiddleware(categoryValidationSchema),createCategory);
+categoriesRouter.route("/categories/:id").get(protect, restrictTo("admin"), getCategory).put(protect, restrictTo("admin"),validationMiddleware(categoryValidationSchema), updateCategory).delete(protect, restrictTo("admin"), deleteCategory);
 
 export default categoriesRouter;
