@@ -3,7 +3,7 @@ import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js"; // import configured swagger-jsdoc output
 import userRoutes from "./routes/userRoutes.js";
-
+import productRouter from "./Routes/productRoutes.js";
 const app = express();
 
 // logging middleware in development environment
@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === "development") {
 app.use( express.json() );
 
 app.use( userRoutes);
-
+app.use( productRouter); 
 // Swagger Docs Route
 app.use( "/api-docs", swaggerUi.serve, swaggerUi.setup( swaggerSpec ) );
 // Raw JSON (for Apidog/Postman/etc.)
