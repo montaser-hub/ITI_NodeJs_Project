@@ -1,7 +1,6 @@
 import express from"express";
 import morgan from"morgan";
 import categoriesRouter from "./Routes/categoryRoutes.js";
-import {errorHandler} from "./Middelwares/categoryMiddleWare.js";
 
 const app = express();
 
@@ -21,7 +20,6 @@ app.use((req, res, next) => {
   console.log("Hello from the MIDDLEWARE :eight_spoked_asterisk:");
   next();
 });
-app.use(errorHandler);
 
 
 

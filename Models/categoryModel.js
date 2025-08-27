@@ -22,12 +22,12 @@ const categorySchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-    
+
   }
 );
 
 // Index for better query performance
-categorySchema.index({ name: 1 }, { unique: true });
+// categorySchema.index({ name: 1 }, { unique: true });
 
 const categoryModel = mongoose.model("category", categorySchema);
 export default categoryModel;

@@ -1,15 +1,10 @@
 import categoryModel from "../Models/categoryModel.js";
-import { catchError, isValidId } from "../Middelwares/categoryMiddleWare.js";
+import  catchError  from "../Middelwares/catchAsync.js";
 // import productModel from "../Models/productModel.js"; // Updated import to include isValidId
 
 // Helper function to find category by ID
 async function findCategoryById(id) {
-    // Moved ID validation here
-    if (!isValidId(id)) {
-        const error = new Error("Invalid ID format");
-        error.statusCode = 400;
-        throw error;
-    }
+
     const category = await categoryModel.findById(id)    //.lean();
     if (!category) {
         const error = new Error("Category not found");
@@ -22,7 +17,7 @@ async function findCategoryById(id) {
 // GET /categories
 export const getCategories = catchError(async (req, res) => {
     const categories = await categoryModel.find()   //.lean();
-    if(categories.length === 0) return  res.status(404).json({message: " No Categorie found"});
+    if(!categories) return  res.status(404).json({message: " No Categorie found"});
     res.status(200).json({message: "Categories retrieved successfully", data: categories,});
 });
 
