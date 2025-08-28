@@ -14,6 +14,7 @@ quantity: Joi.number().integer().min(1).max(100).required().messages({
 export const cartValidationSchema = Joi.object({
     titleCart: Joi.string().min(5).max(50).required().messages({
         "string.empty": " Please Enter The Cart title, Don't leave It Empty ",
+        "string.base": "Must Be The String Type",
         "string.min": "Cart title must be at least 5 characters",
         "string.max": "Cart title cannot exceed 50 characters",
         "any.required": "Cart title is required"

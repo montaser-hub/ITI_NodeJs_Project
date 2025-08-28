@@ -26,17 +26,15 @@ export const getCarts = catchError(async (req, res) => {
                         .populate("userId", "name")
                         .populate("items.productId", "name price");  
     const total = await cartModel.countDocuments(filter);
-    // if(carts.length === 0) return  res.status(404).json({message: " No cart found"});
-    // res.status(200).json({message: "cart retrieved successfully", data: carts,});
     res.status(200).json({ total, page: query.page, limit: query.limit, data: carts });
 
 });
 // Update Cart
 export const updateCart = catchError(async (req, res) => {
-    const cart = await findCartById(req.params.cartId);
-    if (!cart) return res.status(404).json({ message: "Cart not found" });
-    const updatedCart = await cartModel.findByIdAndUpdate(req.params.id, req.body, {new: true,runValidators: true,});
-    res.status(200).json({ message: "Cart updated successfully", data: cart });
+    const updatedCart = await cartModel.findByIdAndUpdate(req.params.cartId, req.body, { new: true, runValidators: true });
+    if (!updatedCart) {return res.status(404).json({ message: "Cart not found" });}
+    updatedCart.save();
+    res.status(200).json({ message: "Cart updated successfully", data: updatedCart });
 });
 // Delete Cart
 export const deleteCart = catchError(async (req, res) => {
@@ -46,9 +44,17 @@ export const deleteCart = catchError(async (req, res) => {
 });
 // Delete Carts
 export const deleteCarts = catchError(async (req, res) => {
-    const deletedCart = await cartModel.deleteMany({ userId: req.params.userId }) 
-    res.status(200).json({ message: "All Carts Of The User Deleted Successfully And Related Products Deleted", data: deletedCart,});
+    const userId = req.user._id;
+    const deletedResult = await cartModel.deleteMany({ userId }); 
+    if (deletedResult.deletedCount === 0) {
+        return res.status(404).json({ message: "No carts found for this user" });
+    }
+    res.status(200).json({ 
+        message: "All carts of the user deleted successfully", 
+        deletedCount: deletedResult.deletedCount,
+    });
 });
+
 
 async function findCartById(id) {
     const Cart = await cartModel.findById(id)
