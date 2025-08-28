@@ -53,7 +53,7 @@ const createProduct = catchError(async (req, res) => {
       quantity,
       category,
       images,
-      user: req.user?._id,
+      addedBy: req.user?._id,
     });
 
     await newProduct.save();
