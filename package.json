@@ -13,6 +13,7 @@
   "author": "Team4",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "@paypal/checkout-server-sdk": "^1.0.3",
     "axios": "^1.11.0",
     "compression": "^1.8.1",
@@ -23,12 +24,24 @@
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
     "joi": "^18.0.1",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.17.2",
     "morgan": "^1.10.1",
     "node-fetch": "^3.3.2",
-    "stripe": "^18.4.0"
+    "nodemailer": "^7.0.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/montaser-hub/ITI_NodeJs_Project.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/montaser-hub/ITI_NodeJs_Project/issues"
+  },
+  "homepage": "https://github.com/montaser-hub/ITI_NodeJs_Project#readme"
 }
