@@ -5,24 +5,18 @@ import swaggerSpec from "./swagger.js"; // import configured swagger-jsdoc outpu
 import userRoutes from "./routes/userRoutes.js";
 import categoriesRouter from "./Routes/categoryRoutes.js";
 import productRouter from "./Routes/productRoutes.js";
-
-
-
-
+import cartRouter from "./Routes/cartRoutes.js";
 const app = express();
-
 // logging middleware in development environment
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
-
 // parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
 app.use( express.json() );
-
 app.use( userRoutes);
 app.use( categoriesRouter);
 app.use( productRouter); 
-
+app.use(cartRouter);
 
 // Swagger Docs Route
 app.use( "/api-docs", swaggerUi.serve, swaggerUi.setup( swaggerSpec ) );
@@ -31,6 +25,9 @@ app.get("/api-docs-json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);
 });
+
+
+
 
 app.use((req, res, next) => {
   console.log("Hello from the MIDDLEWARE :eight_spoked_asterisk:");
