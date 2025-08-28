@@ -66,10 +66,11 @@ export const updateCategory = catchError(async (req, res) => {
 
 // DELETE /categories/:id
 export const deleteCategory = catchError(async (req, res) => {
-    await findCategoryById(req.params.id);
+   const category= await findCategoryById(req.params.id);
+    console.log(req.params.id);
     await productModel.deleteMany({ category: category._id });
 
-    const deletedCategory = await categoryModel.findByIdAndDelete(req.params.id) // Added lean for performance .lean();
+     await categoryModel.findByIdAndDelete(category._id)
 
-    res.status(200).json({ message: "Category deleted successfully and related products deleted", data: deletedCategory,});
+    res.status(200).json({ message: "Category deleted successfully and related products deleted"});
 });

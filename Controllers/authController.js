@@ -23,9 +23,12 @@ export const signup = catchAsync(async (req, res) => {
   });
 
   const verifyToken = signToken(newUser._id);
+
   const verifyURL = `${req.protocol}://${req.get(
+
     "host"
   )}/confirm/${verifyToken}`;
+  console.log(verifyURL);
   sendEmail(verifyURL, newUser.email);
 
   res.status(201).json({
