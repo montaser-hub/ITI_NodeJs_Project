@@ -30,7 +30,7 @@ const productValidationSchema = Joi.object({
 
   categoryId: objectIdSchema.required().messages({
     "string.pattern.base": "Category must be a valid ObjectId",
-    "any.required": "Category is required",
+    "any.required": "categoryId is required",
   }),
 
   images: Joi.array().items(Joi.string()).min(1).required().messages({
@@ -38,9 +38,7 @@ const productValidationSchema = Joi.object({
     "any.required": "Images are required",
   }),
 
-  addedBy: objectIdSchema.messages({
-    "string.pattern.base": "addedBy must be a valid ObjectId",
-  }),
+  
 });
 
 export default productValidationSchema;
