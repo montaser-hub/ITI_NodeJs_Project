@@ -25,7 +25,9 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 // parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
-app.use( express.json() );
+
+app.use(express.json());
+
 app.use( userRoutes);
 app.use( categoriesRouter);
 app.use( productRouter); 

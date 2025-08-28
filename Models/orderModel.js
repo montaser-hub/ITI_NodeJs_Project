@@ -43,6 +43,7 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: [1, "Order total price must be greater than 0"],
+
     },
 
     paymentMethodType: {
@@ -55,7 +56,6 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Payment",
     },
-
     isPaid: { type: Boolean, default: false },
     paidAt: Date,
 
@@ -86,7 +86,6 @@ orderSchema.pre("save", function (next) {
     );
     this.totalOrderPrice = subtotal + this.shippingPrice;
   }
-
   if (this.totalOrderPrice <= 0) {
     return next(new Error("Order total price must be greater than 0"));
   }
