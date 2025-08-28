@@ -1,5 +1,5 @@
 import express from "express";
-// import { protect, admin } from "../Middelwares/authMiddleware.js"; // Assuming this exists
+import { protect, restrictTo } from "../Controllers/authController.js";
 import {
   placeOrder,
   getMyOrders,
@@ -7,16 +7,19 @@ import {
   updateOrderToDelivered,
   cancelOrder,
 } from "../Controllers/orderController.js";
-import {
-  validatePlaceOrder,
-} from "../Utils/Validation/orderValidation.js";
+import { validateOrderSchema } from "../Utils/Validation/orderValidation.js";
+import validationMiddleware from "../Middelwares/validation.js";
 
 const router = express.Router();
 
-router.route("/").post(validatePlaceOrder, placeOrder);
-router.route("/myorders").get(getMyOrders);
-router.route("/:id").get(getOrderById);
-router.route("/:id/deliver").put(updateOrderToDelivered);
-router.route("/:id/cancel").put(cancelOrder);
+router
+  .route("/")
+  .post(protect, validationMiddleware(validateOrderSchema), placeOrder);
+router.route("/myorders").get(protect, getMyOrders);
+router.route("/:id").get(protect, getOrderById);
+router
+  .route("/:id/deliver")
+  .put(protect, restrictTo("admin"), updateOrderToDelivered);
+router.route("/:id/cancel").put(protect, cancelOrder);
 
 export default router;

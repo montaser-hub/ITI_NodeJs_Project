@@ -1,15 +1,14 @@
 import Joi from "joi";
+import objectIdSchema from "../../schema.js";
+
 
 // Validation schema for placing an order
 const placeOrderSchema = Joi.object({
   cartItems: Joi.array()
     .items(
       Joi.object({
-        product: Joi.string()
-          .pattern(/^[0-9a-fA-F]{24}$/)
-          .required()
+        product: objectIdSchema.required()
           .messages({
-            "string.pattern.base": "Product ID must be a valid ObjectId",
             "any.required": "Product ID is required",
           }),
         quantity: Joi.number().integer().min(1).required().messages({
@@ -60,19 +59,5 @@ const placeOrderSchema = Joi.object({
     }),
 });
 
-
-// Middleware to validate request body
-const validate = (schema) => (req, res, next) => {
-  const { error } = schema.validate(req.body, { abortEarly: false }); // Errors in more than one field → will be collected
-  if (error) {
-    const errors = error.details.map((detail) => ({
-      field: detail.path.join("."),
-      message: detail.message,
-    }));
-    return res.status(400).json({ errors });
-  }
-  next();
-};
-
 // Export validation middlewares
-export const validatePlaceOrder = validate(placeOrderSchema);
+export const validateOrderSchema = placeOrderSchema;

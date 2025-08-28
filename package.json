@@ -13,9 +13,9 @@
   "author": "Team4",
   "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^3.0.2",
     "@paypal/checkout-server-sdk": "^1.0.3",
     "axios": "^1.11.0",
+    "bcryptjs": "^3.0.2",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -27,6 +27,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.17.2",
     "morgan": "^1.10.1",
+    "node-domexception": "^2.0.2",
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.5",
     "swagger-jsdoc": "^6.2.8",

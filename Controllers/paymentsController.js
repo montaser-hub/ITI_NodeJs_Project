@@ -1,10 +1,7 @@
 import { Payment } from "../Models/paymentsModel.js";
 import { Order } from "../Models/orderModel.js";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
 import fetch from "node-fetch";
 
-dotenv.config({ path: "./config.env" });
 
 async function getPayPalAccessToken() {
   const auth = Buffer.from(
@@ -152,7 +149,7 @@ const paypalWebhook = async (req, res) => {
     if (!response.ok || verifyResponse.verification_status !== "SUCCESS") {
       return res.status(400).send("Webhook verification failed");
     }
-
+    let orderObjectId;
     switch (event.event_type) {
       case "PAYMENT.CAPTURE.COMPLETED":
       case "CHECKOUT.ORDER.APPROVED": {
@@ -164,14 +161,6 @@ const paypalWebhook = async (req, res) => {
         if (!orderId) {
           break;
         }
-
-        let orderObjectId;
-        try {
-          orderObjectId = new mongoose.Types.ObjectId(orderId);
-        } catch (err) {
-          break;
-        }
-
         const order = await Order.findById(orderObjectId);
         const payment = await Payment.findOne({ orderId: orderObjectId });
 
@@ -195,14 +184,6 @@ const paypalWebhook = async (req, res) => {
         if (!orderId) {
           break;
         }
-
-        let orderObjectId;
-        try {
-          orderObjectId = new mongoose.Types.ObjectId(orderId);
-        } catch (err) {
-          break;
-        }
-
         const payment = await Payment.findOne({ orderId: orderObjectId });
         if (payment) {
           payment.status = "failed";

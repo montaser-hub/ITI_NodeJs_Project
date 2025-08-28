@@ -1,11 +1,11 @@
-import asyncHandler from "express-async-handler";
+import catchError from "../Middelwares/catchAsync.js";
 import { Order } from "../Models/orderModel.js";
 import { Payment } from "../Models/paymentsModel.js";
 
 // @desc    Place an order from the cart
 // @route   POST /api/orders
 // @access  Private (User)
-const placeOrder = asyncHandler(async (req, res) => {
+const placeOrder = catchError(async (req, res) => {
   const { cartItems, shippingAddress, shippingPrice, paymentMethodType } =
     req.body;
 
@@ -25,7 +25,7 @@ const placeOrder = asyncHandler(async (req, res) => {
 // @desc    View order history for the user
 // @route   GET /api/orders/myorders
 // @access  Private (User)
-const getMyOrders = asyncHandler(async (req, res) => {
+const getMyOrders = catchError(async (req, res) => {
   const orders = await Order.find({ user: req.user._id })
     .sort({ createdAt: -1 })
     .populate("cartItems.product", "name price")
@@ -36,7 +36,7 @@ const getMyOrders = asyncHandler(async (req, res) => {
 // @desc    Get order by ID and track status
 // @route   GET /api/orders/:id
 // @access  Private (User/Admin)
-const getOrderById = asyncHandler(async (req, res) => {
+const getOrderById = catchError(async (req, res) => {
   const order = await Order.findById(req.params.id)
     .populate("user", "name email")
     .populate("cartItems.product", "name price")
@@ -53,7 +53,7 @@ const getOrderById = asyncHandler(async (req, res) => {
 // @desc    Update order to delivered
 // @route   PUT /api/orders/:id/deliver
 // @access  Private (Admin)
-const updateOrderToDelivered = asyncHandler(async (req, res) => {
+const updateOrderToDelivered = catchError(async (req, res) => {
   const order = await Order.findById(req.params.id);
 
   if (order) {
@@ -71,7 +71,7 @@ const updateOrderToDelivered = asyncHandler(async (req, res) => {
 // @desc    Cancel an order
 // @route   PUT /api/orders/:id/cancel
 // @access  Private (User)
-const cancelOrder = asyncHandler(async (req, res) => {
+const cancelOrder = catchError(async (req, res) => {
   const order = await Order.findById(req.params.id);
 
   if (

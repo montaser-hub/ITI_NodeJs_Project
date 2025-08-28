@@ -1,4 +1,6 @@
 import express from "express";
+import { protect } from "../Controllers/authController.js"; // Assuming this exists
+
 import {
   paypalWebhook,
   createPayPalPayment,
@@ -8,20 +10,6 @@ const router = express.Router();
 
 // PayPal Routes
 router.post("/paypal/webhook", express.json(), paypalWebhook);
-router.post("/paypal/:orderId", createPayPalPayment);
-
-// Stripe Routes
-
-// import {
-//   createStripePayment,
-//   stripeWebhookHandler,
-//   stripeSuccess,
-//   stripeCancel,
-// } from "../Controllers/stripeController.js";
-
-// router.post("/stripe/:orderId", createStripePayment);
-// router.post("/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
-// router.get("/stripe/success", stripeSuccess);
-// router.get("/stripe/cancel", stripeCancel);
+router.post("/paypal/:orderId", protect, createPayPalPayment);
 
 export default router;
