@@ -11,6 +11,6 @@ cartRouter.route("/carts/:cartId")
                 .put(protect,validationMiddleware(cartValidationSchema), updateCart)
                 .delete(protect,deleteCart)
 cartRouter.route("/carts")
-                .get(getCarts)
-                .delete(deleteCarts);
+                .get(protect,getCarts)
+                .delete(protect,deleteCarts);
 export default cartRouter;
