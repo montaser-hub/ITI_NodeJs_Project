@@ -1,6 +1,6 @@
 import User from "../Models/userModel.js";
 import catchAsync from "../Middelwares/catchAsync.js";
-
+import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 /**** Normal User Functions ****/
 export const getMe = catchAsync(async (req, res, next) => {
   const currentUserId = req.user.id;
@@ -32,11 +32,18 @@ export const deleteMe = catchAsync(async (req, res) => {
 
 /****Admin Functions******/
 export const getAllUsers = catchAsync(async (req, res) => {
-  const users = await User.find();
+  const query = req.query;
+  const filter = filterQuery(query);
+  const { skip, limit } = paginateQuery(query);
+  const sort = sortQuery(query);
 
-  const total = await User.countDocuments();
+  const users = await User.find(filter).skip(skip).limit(limit).sort(sort); //{name:montaser,age:29}
 
-  res.status(200).json({ total, data: users });
+  const total = await User.countDocuments(filter);
+
+  res
+    .status(200)
+    .json({ total, page: query.page, limit: query.limit, data: users });
 });
 
 export const getUserById = catchAsync(async (req, res) => {
