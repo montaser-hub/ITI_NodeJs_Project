@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 import dotenv from "dotenv";
 
-//Uncaught exceptions
+// Uncaught exceptions
 process.on("uncaughtException", (err) => {
   console.log("UNCAUGHT EXCEPTION: 💥 Shutting down...", err);
   process.exit(1);
