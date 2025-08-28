@@ -28,7 +28,7 @@ const userValidationSchema = Joi.object({
 )           # End of group */
       new RegExp(/^((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{6,20})/)
     )
-     .messages({
+      .messages({
       "string.pattern.base":
         "Password must include at least 1 uppercase, 1 lowercase, 1 number, and 1 special character, and be 8–20 characters long",
       "string.empty": "Password cannot be empty",
