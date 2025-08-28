@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import ProductModel from "./productModel.js";
 const cartSchema = new mongoose.Schema(
     {
     titleCart:{
@@ -48,19 +49,24 @@ const cartSchema = new mongoose.Schema(
     });
 
 
-cartSchema.pre("save", function (next) {
-    if (this.items && this.items.length > 0) {
-        this.items.forEach(item => {
-            const price = item.priceAtTime || 0;
-            const qty = item.quantity || 0;
-            item.subTotal = price * qty;
-        });
-        this.totalPrice = this.items.reduce((sum, item) => sum + (item.subTotal || 0), 0);
-    } else {
-        this.totalPrice = 0;
+    cartSchema.pre("save", async function (next) {
+    let total = 0;
+    for (const item of this.items) {
+        const product = await ProductModel.findById(item.productId);
+        if (product) {
+        item.priceAtTime = product.price;
+        item.subTotal = product.price * item.quantity;
+        total += item.subTotal;
+        } else {
+        console.log("⚠️ Product not found for ID:", item.productId);
+        }
     }
+    this.totalPrice = total;
     next();
-});
+    });
+
+
+
 
 
 const cartModel = mongoose.model('Cart', cartSchema);

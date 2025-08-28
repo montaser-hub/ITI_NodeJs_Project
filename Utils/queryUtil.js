@@ -1,4 +1,4 @@
-const allowedFilterFields = ['age','name', 'email', 'isConfirmed', 'active','role']; // Add valid filter fields
+const allowedFilterFields = ['age','name', 'email', 'isConfirmed', 'active','role','userId','totalPrice','items','titleCart']; // Add valid filter fields
 
 const allowedOperators = ["gte", "gt", "lte", "lt", "in", "ne"];
 
