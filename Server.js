@@ -1,36 +1,45 @@
 import mongoose from "mongoose";
-
 import dotenv from "dotenv";
+import express from "express";
 
-//Uncaught exceptions
+dotenv.config({ path: "./config.env" });
+
+// Uncaught exceptions
 process.on("uncaughtException", (err) => {
   console.log("UNCAUGHT EXCEPTION: 💥 Shutting down...", err);
   process.exit(1);
 });
 
-dotenv.config({ path: "./config.env" });
 import app from "./app.js";
-// 4) START THE SERVER
 
-const DB = process.env.DATABASE.replace(
-  "<PASSWORD>",
-  process.env.DATABASE_PASSWORD
-);
-//return promise that can can access con = (connection object)
-mongoose
-  .connect(DB)
-  .then(() => console.log("DB connection successful!")) //console.log(con.connections)
-  .catch((err) => console.error("DB connection error:", err));
+// Database configuration
+const startServer = async () => {
+  const port = process.env.PORT || 3000;
+  try {
+    await mongoose
+      .connect(
+        process.env.DATABASE.replace(
+          "<PASSWORD>",
+          process.env.DATABASE_PASSWORD
+        )
+      )
+      .then(() => console.log("DB connection successful!"))
+      .catch((err) => console.error("DB connection error:", err));
 
-const port = process.env.PORT || 3000;
-const server = app.listen(port, () => {
-  console.log(`Server running on port ${port}...`);
-});
-//Unhandled promise rejection is handled here
-process.on("unhandledRejection", (err) => {
-  console.log(err.name, err.message);
-  console.log("UNHANDLED REJECTION! 💥 shutting down...");
-  server.close(() => {
+    // Add raw body parser for Stripe webhook
+    app.use(
+      "/api/payments/stripe/webhook",
+      express.raw({ type: "application/json" })
+    );
+
+    // Parse JSON for other routes
+    app.use(express.json());
+
+    app.listen(port, () => console.log(`Server running on port ${port}!`));
+  } catch (error) {
+    console.error("Error starting server:", error.message);
     process.exit(1);
-  });
-});
+  }
+};
+
+startServer();

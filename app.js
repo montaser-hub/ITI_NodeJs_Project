@@ -1,19 +1,40 @@
 import express from "express";
+import dotenv from "dotenv";
 import morgan from "morgan";
+import cors from "cors";
+import helmet from "helmet";
+import hpp from "hpp";
+import compression from "compression";
+import orderRoutes from "./Routes/orderRoutes.js";
+import paymentRoutes from "./Routes/paymentRoutes.js";
+import { globalError } from "./Middelwares/globalErrorHandler.js";
+
+dotenv.config({ path: "./config.env" });
 
 const app = express();
 
-// logging middleware in development environment
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(hpp());
+app.use(compression());
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-// parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
-app.use(express.json());
+// Routes
+app.use("/api/orders", orderRoutes);
+app.use("/api/payments", paymentRoutes);
 
-app.use((req, res, next) => {
-  console.log("Hello from the MIDDLEWARE :eight_spoked_asterisk:");
-  next();
+app.get("/cancel", (req, res) => {
+  res.send("CANCELLED payment");
 });
+
+app.get("/success", (req, res) => {
+  res.send("SUCCESS payment");
+});
+
+// Global error handling middleware
+app.use(globalError);
 
 export default app;
