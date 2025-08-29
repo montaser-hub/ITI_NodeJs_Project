@@ -5,6 +5,8 @@ import User from "../Models/userModel.js";
 import catchAsync from "../Middelwares/catchAsync.js";
 import sendEmail from "../Utils/Email.js";
 import crypto from "crypto";
+import AppError from "../Utils/apiError.js";
+
 
 //function to sign token with user id as payload and secret from env file and expires in also from env file to follow DRY principle
 export const signToken = (id) => {
@@ -67,7 +69,7 @@ export const login = catchAsync( async ( req, res, next ) => {
   const { email, password } = req.body;
   //1) Check if email and password exist
   if (!email || !password) {
-    return next(new Error("Please provide email and password!"));
+    return next(new AppError("Please provide email and password!",400));
   }
   //2) Check if user exists && password is correct
   const user = await User.findOne( { email } ).select("+password"); //to select the password field which has select: false in userModel
@@ -83,7 +85,7 @@ export const login = catchAsync( async ( req, res, next ) => {
   }
   //5) check if password is correct by using instance method from userModel
   if (!user || !(await user.correctPassword(password, user.password))) {
-    return next(new Error("Incorrect email or password"));
+    return next(new AppError("Incorrect email or password", 401));
   }
 
   //6) If everything ok, send token to client
@@ -126,7 +128,7 @@ export const protect = catchAsync(async (req, res, next) => {
   }
   if (!token) {
     return next(
-      new Error("You are not logged in! Please log in to get access.", 401)
+      new AppError("You are not logged in! Please log in to get access.", 401)
     );
   }
 
@@ -212,14 +214,14 @@ export const protect = catchAsync(async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
     return next(
-      new Error("The user belonging to this token does no longer exist.", 401)
+      new AppError("The user belonging to this token does no longer exist.", 401)
     );
   }
 
   //4) Check if user changed password after the token was issued (replace with instance method in userModel)
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new Error("User recently changed password! Please log in again.", 401)
+      new AppError("User recently changed password! Please log in again.", 401)
     );
   }
 
@@ -234,7 +236,7 @@ export const restrictTo = (...roles) => {
     //roles is an array ['admin']. role='user'
     if (!roles.includes(req.user.role)) {
       return next(
-        new Error("You do not have permission to perform this action", 403)
+        new AppError("You do not have permission to perform this action", 403)
       );
     }
     next();
@@ -245,7 +247,7 @@ export const forgetPassword = catchAsync(async (req, res, next) => {
   //1) Get user based on Posted email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
-    return next(new Error("There is no user with email address.", 404));
+    return next(new AppError("There is no user with email address.", 404));
   }
   //2) Generate the random reset token
   const resetToken = await user.createPasswordResetToken(); //instance method from userModel
@@ -267,7 +269,7 @@ export const forgetPassword = catchAsync(async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     return next(
-      new Error("There was an error sending the email. Try again later!", 500)
+      new AppError("There was an error sending the email. Try again later!", 500)
     );
   }
 });
@@ -285,7 +287,7 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   });
   //2) If token has not expired, and there is user, set the new password
   if (!user) {
-    return next(new Error("Token is invalid or has expired", 400));
+    return next(new AppError("Token is invalid or has expired", 400));
   }
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -308,7 +310,7 @@ export const updateMyPassword = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user.id).select("+password"); //to select the password field which has select: false in userModel
   //2) Check if POSTed current password is correct
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
-    return next(new Error("Your current password is wrong.", 401));
+    return next(new AppError("Your current password is wrong.", 401));
   }
   //3) If so, update password
   user.password = req.body.password;

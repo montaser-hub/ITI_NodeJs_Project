@@ -32,8 +32,8 @@ app.use( userRoutes);
 app.use( categoriesRouter);
 app.use( productRouter); 
 app.use(cartRouter);
-app.use("/api/orders", orderRoutes);
-app.use("/api/payments", paymentRoutes);
+app.use("/orders", orderRoutes);
+app.use("/payments", paymentRoutes);
 
 app.get("/cancel", (req, res) => {
   res.send("CANCELLED payment");
@@ -54,10 +54,6 @@ app.get("/api-docs-json", (req, res) => {
 
 
 
-app.use((req, res, next) => {
-  console.log("Hello from the MIDDLEWARE :eight_spoked_asterisk:");
-  next();
-});
 
 app.all("/{*any}", (req, res, next) => {
   next(new AppError(`Can not find ${req.originalUrl} on this server`, 404));
