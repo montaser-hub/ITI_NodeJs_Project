@@ -32,7 +32,6 @@ const sendErrorDev = (err, req, res) => {
       status: err.status,
       error: err,
       message: err.message,
-      stack: err.stack,
     });
   }
   //B) Render the error on the client
