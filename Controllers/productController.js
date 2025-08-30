@@ -6,10 +6,12 @@ import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
 // Get products with pagination
 const getProducts = catchError(async (req, res) => {
+
+
     // pagination params
     const query = req.query;
     const filter = filterQuery(query);
-    const { skip, limit } = paginateQuery(query);
+    const { page ,skip, limit } = paginateQuery(query);
     const sort = sortQuery(query);
 
     const products = await ProductModel.find(filter)
@@ -24,10 +26,10 @@ const getProducts = catchError(async (req, res) => {
 
     res.json({
       message: "success",
-      page,
-      limit,
-      totalProducts,
-      data: products,
+        page,
+        limit,
+        totalProducts,
+        data: products,
     });
  
 });
@@ -35,8 +37,8 @@ const getProducts = catchError(async (req, res) => {
 // Get product by ID
 const getProductById = catchError(async (req, res) => {
     const product = await ProductModel.findById(req.params.id)
-      .populate("category", "name")
-      .populate("user", "name email");
+      .populate("categoryId", "name")
+      .populate("addedBy", "name email");
     if (!product) return res.status(404).json({ message: "Product not found" });
     res.json({ message: "success", data: product });
  
@@ -44,14 +46,14 @@ const getProductById = catchError(async (req, res) => {
 
 // Create product
 const createProduct = catchError(async (req, res) => {
-    const { name, description, price, quantity, category, images } = req.body;
+    const { name, description, price, quantity,  categoryId, images } = req.body;
 
     const newProduct = new ProductModel({
       name,
       description,
       price,
       quantity,
-      category,
+      categoryId,
       images,
       addedBy: req.user?._id,
     });
