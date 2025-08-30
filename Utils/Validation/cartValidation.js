@@ -19,7 +19,8 @@ export const cartValidationSchema = Joi.object({
         "string.max": "Cart title cannot exceed 50 characters",
         "any.required": "Cart title is required"
     }),
-    items: Joi.array().items(itemSchema).min(1).messages({
-        "array.min": "Cart must have at least one item",
+    items: Joi.array().items(itemSchema).min(1).required().messages({
+        "array.min": "Cart must have at least one Product",
+        "any.required": "You Must Have Enter Items"
     })
 });

@@ -1,67 +1,61 @@
 import cartModel from "../Models/cartModel.js";
-import catchError from "../Middelwares/catchAsync.js";
+import catchAsync from "../Middelwares/catchAsync.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
+import AppError from "../Utils/apiError.js";
+const cartPopulate = [
+    { path: "userId", select: "name" },
+    { path: "items.productId", select: "name price category description" }
+];
 // create cart
-export const createCart = catchError(async (req, res) => {
-        const userId = req.user._id;
-        let data = req.body;
-        data.userId = userId
-        let newCart = await cartModel.create(data);
-        res.status(201).json({ message: "Cart Created Successfully", data: newCart });
+export const createCart = catchAsync(async (req, res, next) => {
+    const userId = req.user._id;
+    let data = req.body;
+    data.userId = userId;
+    const newCart = await cartModel.create(data);
+    res.status(201).json({ message: "Cart Created Successfully", data: newCart });
 });
 // Get Cart
-export const getCart = catchError(async (req, res) => {
-
-    const cart = await findCartById(req.params.cartId)
-                        ; 
+export const getCart = catchAsync(async (req, res, next) => {
+    const cart = await findCartById(req.params.cartId);
+    if (cart.userId._id.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to access this cart", 403));
     res.status(200).json({message: "Cart retrieved successfully",data: cart,});
 });
 // Get All Carts
-export const getCarts = catchError(async (req, res) => {
+export const getCarts = catchAsync(async (req, res, next) => {
     const query = req.query;
     const filter = filterQuery(query);
     const { skip, limit } = paginateQuery(query);
     const sort = sortQuery(query);
-    const carts = await cartModel.find(filter).skip(skip).limit(limit).sort(sort)
-                        .populate("userId", "name")
-                        .populate("items.productId", "name price");  
+    const carts = await cartModel.find(filter).skip(skip).limit(limit).sort(sort).populate(cartPopulate);
     const total = await cartModel.countDocuments(filter);
-    res.status(200).json({ total, page: query.page, limit: query.limit, data: carts });
-
+    if (total === 0) return next(new AppError("No carts found for this user", 404));
+    const totalPriceOfCarts = carts.reduce((sum, cart) => sum + (cart.totalPrice || 0),0);
+    res.status(200).json({total,page: Number(query.page) || 1,limit: Number(query.limit) || 10,totalPriceOfCarts,data: carts,});
 });
 // Update Cart
-export const updateCart = catchError(async (req, res) => {
-    const updatedCart = await cartModel.findByIdAndUpdate(req.params.cartId, req.body, { new: true, runValidators: true });
-    if (!updatedCart) {return res.status(404).json({ message: "Cart not found" });}
-    updatedCart.save();
-    res.status(200).json({ message: "Cart updated successfully", data: updatedCart });
+export const updateCart = catchAsync(async (req, res, next) => {
+    let cart = await findCartById(req.params.cartId);
+    if (cart.userId._id.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to update this cart", 403));
+    Object.assign(cart, req.body);
+    await cart.save();
+    res.status(200).json({ message: "Cart updated successfully", data: cart });
 });
 // Delete Cart
-export const deleteCart = catchError(async (req, res) => {
+export const deleteCart = catchAsync(async (req, res, next) => {
     const cart = await findCartById(req.params.cartId);
-    const deletedCart = await cartModel.findByIdAndDelete(cart) 
-    res.status(200).json({ message: "Cart Deleted Successfully And Related Products Deleted", data: deletedCart,});
+    if (cart.userId._id.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to delete this cart", 403));
+    await cartModel.findByIdAndDelete(cart._id);
+    res.status(200).json({message: "Cart Deleted Successfully",data: cart,});
 });
 // Delete Carts
-export const deleteCarts = catchError(async (req, res) => {
+export const deleteCarts = catchAsync(async (req, res, next) => {
     const userId = req.user._id;
-    const deletedResult = await cartModel.deleteMany({ userId }); 
-    if (deletedResult.deletedCount === 0) {
-        return res.status(404).json({ message: "No carts found for this user" });
-    }
-    res.status(200).json({ 
-        message: "All carts of the user deleted successfully", 
-        deletedCount: deletedResult.deletedCount,
-    });
-});
-
-
+    const deletedResult = await cartModel.deleteMany({ userId });
+    if (deletedResult.deletedCount === 0) return next(new AppError("No carts found for this user", 404));
+    res.status(200).json({message: "All carts of the user deleted successfully",deletedCount: deletedResult.deletedCount,});});
+// helper function
 async function findCartById(id) {
-    const Cart = await cartModel.findById(id)
-                        .populate("userId", "name")
-                        .populate("items.productId", "name price");
-    if (!Cart) {
-        return res.status(404).json({ message: "Cart not found" });
-    }
-    return Cart;
+    const cart = await cartModel.findById(id).populate(cartPopulate);
+    if (!cart) return new AppError("Cart not found", 404);
+    return cart;
 }
