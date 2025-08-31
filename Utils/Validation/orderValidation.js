@@ -1,23 +1,17 @@
 import Joi from "joi";
 import objectIdSchema from "../../schema.js";
 
-
 // Validation schema for placing an order
 const placeOrderSchema = Joi.object({
   cartItems: Joi.array()
     .items(
       Joi.object({
-        product: objectIdSchema.required()
-          .messages({
-            "any.required": "Product ID is required",
-          }),
+        product: objectIdSchema.required().messages({
+          "any.required": "Product ID is required",
+        }),
         quantity: Joi.number().integer().min(1).required().messages({
           "number.min": "Quantity cannot be less than 1",
           "any.required": "Quantity is required",
-        }),
-        price: Joi.number().positive().required().messages({
-          "number.positive": "Price must be greater than 0",
-          "any.required": "Price is required",
         }),
         color: Joi.string().trim().optional().allow("").messages({
           "string.base": "Color must be a string",
