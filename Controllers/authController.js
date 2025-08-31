@@ -50,7 +50,7 @@ export const verifyAccount = catchError(async (req, res, next) => {
   // 2) Find the user by decoded email
   const user = await User.findOne({ _id: decoded.id });
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    return next(new AppError("User not found", 404));
   }
   // 3) Update user's account status
   user.isConfirmed = true;

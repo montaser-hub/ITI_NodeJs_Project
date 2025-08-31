@@ -1,13 +1,13 @@
 import categoryModel from "../Models/categoryModel.js";
 import catchError from "../Middelwares/catchError.js";
-import appError from "../Utils/appError.js";
+import AppError from "../Utils/appError.js";
 import productModel from "../Models/productModel.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
 // Helper function to find category by ID
-async function findCategoryById(id,next) {
+async function findCategoryById(id, next) {
   const category = await categoryModel.findById(id); //.lean();
-  if (!category) return next(new appError("Category not found", 404));
+  if (!category) return next(new AppError("Category not found", 404));
   return category;
 }
 
@@ -56,7 +56,7 @@ export const createCategory = catchError(async (req, res, next) => {
 });
 
 // PUT /categories/:id
-export const updateCategory = catchError(async (req, res,next) => {
+export const updateCategory = catchError(async (req, res, next) => {
   await findCategoryById(req.params.id, next);
   const updatedCategory = await categoryModel.findByIdAndUpdate(
     req.params.id,
@@ -71,8 +71,8 @@ export const updateCategory = catchError(async (req, res,next) => {
 // DELETE /categories/:id
 export const deleteCategory = catchError(async (req, res, next) => {
   const category = await findCategoryById(req.params.id, next);
-  
-  await productModel.deleteMany( { category: category._id } );
+
+  await productModel.deleteMany({ category: category._id });
 
   await categoryModel.findByIdAndDelete(category._id);
 

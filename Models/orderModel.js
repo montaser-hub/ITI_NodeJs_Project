@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import ProductModel from "./productModel.js";
+import AppError from "../utils/appError.js"; 
 
 const orderSchema = new mongoose.Schema(
   {
@@ -115,7 +116,7 @@ orderSchema.pre("validate", async function (next) {
 // Before saving the order, calculate the total price = Sum of (Price x Quantity) + Shipping Price
 orderSchema.pre("save", function (next) {
   if (!this.cartItems || this.cartItems.length === 0) {
-    return next(new appError("Order must have at least one cart item", 400));
+    return next(new AppError("Order must have at least one cart item", 400));
   }
   if (this.cartItems?.length) {
     const subtotal = this.cartItems.reduce(
@@ -125,7 +126,7 @@ orderSchema.pre("save", function (next) {
     this.totalOrderPrice = subtotal + this.shippingPrice;
   }
   if (this.totalOrderPrice <= 0) {
-    return next(new appError("Order total price must be greater than 0", 400));
+    return next(new AppError("Order total price must be greater than 0", 400));
   }
   next();
 });

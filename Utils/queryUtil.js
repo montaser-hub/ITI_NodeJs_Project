@@ -1,4 +1,4 @@
-import appError from "../Utils/appError.js";
+import AppError from "../Utils/appError.js";
 const allowedFilterFields = [
   "age",
   "name",
@@ -28,7 +28,7 @@ const filterQuery = (queryString) => {
 
     // Validate allowed filter fields
     if (!allowedFilterFields.includes(key) && !key.includes("__")) {
-      throw new appError(`Invalid filter field: ${key}`);
+      throw new AppError(`Invalid filter field: ${key}`);
     }
   });
 
@@ -36,7 +36,7 @@ const filterQuery = (queryString) => {
   let queryStr = JSON.stringify(queryObject);
   queryStr = queryStr.replace(/\b(gte|gt|lt|lte|in|ne)\b/g, (match) => {
     if (!allowedOperators.includes(match)) {
-      throw new appError(`Invalid filter operator: ${match}`);
+      throw new AppError(`Invalid filter operator: ${match}`);
     }
     return `$${match}`; // MongoDB operator syntax
   });

@@ -1,6 +1,6 @@
 import cartModel from "../Models/cartModel.js";
 import catchError from "../Middelwares/catchError.js";
-import appError from "../Utils/appError.js";
+import AppError from "../Utils/appError.js";
 
 // create cart
 export const createCart = catchError(async (req, res) => {

@@ -1,7 +1,7 @@
 import catchError from "../Middelwares/catchError.js";
 import { Order } from "../Models/orderModel.js";
 import { Payment } from "../Models/paymentsModel.js";
-import appError from "../Utils/appError.js";
+import AppError from "../Utils/appError.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
 // @desc    Place an order from the cart
@@ -84,7 +84,7 @@ const getOrderById = catchError(async (req, res, next) => {
   if (order) {
     res.json(order);
   } else {
-    return next(new appError("Order not found", 404));
+    return next(new AppError("Order not found", 404));
   }
 });
 
@@ -101,7 +101,7 @@ const updateOrderToDelivered = catchError(async (req, res, next) => {
     const updatedOrder = await order.save();
     res.json(updatedOrder);
   } else {
-    return next(new appError("Order not found", 404));
+    return next(new AppError("Order not found", 404));
   }
 });
 
@@ -131,7 +131,7 @@ const cancelOrder = catchError(async (req, res, next) => {
     const updatedOrder = await order.save();
     res.json(updatedOrder);
   } else {
-    return next(new appError("Cannot cancel this order", 400));
+    return next(new AppError("Cannot cancel this order", 400));
   }
 });
 

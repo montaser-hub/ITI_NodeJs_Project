@@ -1,7 +1,7 @@
 import { Payment } from "../Models/paymentsModel.js";
 import { Order } from "../Models/orderModel.js";
 import fetch from "node-fetch";
-import appError from "../Utils/appError.js";
+import AppError from "../Utils/appError.js";
 
 async function getPayPalAccessToken() {
   const auth = Buffer.from(
@@ -22,7 +22,7 @@ async function getPayPalAccessToken() {
 
   const data = await response.json();
   if (!response.ok) {
-    throw new appError("Failed to get PayPal access token", 401);
+    throw new AppError("Failed to get PayPal access token", 401);
   }
   return data.access_token;
 }
@@ -35,7 +35,7 @@ async function getPayPalAccessToken() {
 const createPayPalPayment = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.orderId);
-    if (!order) return next(new appError("Order not found", 404));
+    if (!order) return next(new AppError("Order not found", 404));
 
     const accessToken = await getPayPalAccessToken();
     const response = await fetch(
@@ -76,7 +76,7 @@ const createPayPalPayment = async (req, res, next) => {
     await order.save();
 
     const approveLink = data.links.find((l) => l.rel === "approve")?.href;
-    if (!approveLink) return next(new appError("No approve link found", 404));
+    if (!approveLink) return next(new AppError("No approve link found", 404));
 
     res.json({ url: approveLink });
   } catch (err) {
@@ -102,7 +102,7 @@ const paypalWebhook = async (req, res, next) => {
 
     for (const header of requiredHeaders) {
       if (!req.headers[header])
-        return next(new appError(`Missing required header: ${header}`, 400));
+        return next(new AppError(`Missing required header: ${header}`, 400));
     }
 
     const verifyPayload = {
@@ -131,7 +131,7 @@ const paypalWebhook = async (req, res, next) => {
     const verifyResponse = await response.json();
 
     if (!response.ok || verifyResponse.verification_status !== "SUCCESS")
-      return next(new appError("Webhook verification faild", 400));
+      return next(new AppError("Webhook verification faild", 400));
     let orderObjectId;
 
     switch (event.event_type) {
@@ -210,7 +210,7 @@ const paypalWebhook = async (req, res, next) => {
 
     res.sendStatus(200);
   } catch (err) {
-    return next(new appError(`server Error ${err.mesage}`, 500));
+    return next(new AppError(`server Error ${err.mesage}`, 500));
   }
 };
 
@@ -224,15 +224,15 @@ const capturePayPalPayment = async (req, res, next) => {
     const { orderId } = req.params;
     const { token } = req.query;
 
-    if (!token) return next(new appError("No token provided", 400));
+    if (!token) return next(new AppError("No token provided", 400));
 
     const order = await Order.findById(orderId);
-    if (!order) return next(new appError("Order not found", 404));
+    if (!order) return next(new AppError("Order not found", 404));
 
     const payment = await Payment.findOne({
       orderId: new mongoose.Types.ObjectId(orderId),
     });
-    if (!payment) return next(new appError("Payment not found", 404));
+    if (!payment) return next(new AppError("Payment not found", 404));
 
     const accessToken = await getPayPalAccessToken();
     const response = await fetch(
@@ -248,7 +248,7 @@ const capturePayPalPayment = async (req, res, next) => {
 
     const data = await response.json();
     if (!response.ok)
-      return next(new appError(`Failed to capture payment : ${data}`, 500));
+      return next(new AppError(`Failed to capture payment : ${data}`, 500));
 
     payment.status = "success";
     payment.transactionReference = data.id || payment.transactionReference;
@@ -261,7 +261,7 @@ const capturePayPalPayment = async (req, res, next) => {
 
     res.redirect("/success");
   } catch (err) {
-    return next(new appError(`server Error ${err.mesage}`, 500));
+    return next(new AppError(`server Error ${err.mesage}`, 500));
   }
 };
 

@@ -1,7 +1,7 @@
 import User from "../Models/userModel.js";
 import catchError from "../Middelwares/catchError.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
-import appError from "../Utils/appError.js";
+import AppError from "../Utils/appError.js";
 
 /**** Normal User Functions ****/
 export const getMe = catchError(async (req, res, next) => {
@@ -76,7 +76,7 @@ export const deleteUser = catchError(async (req, res, next) => {
 async function findeUserById(id, next) {
   const user = await User.findById(id); //.lean();
   if (!user) {
-    return next(new appError("User not found", 404));
+    return next(new AppError("User not found", 404));
   }
   return user;
 }
