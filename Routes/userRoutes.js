@@ -21,7 +21,11 @@ import {
   deleteUser,
 } from "../Controllers/userController.js";
 import validationMiddleware from "../Middelwares/validation.js";
-import userValidationSchema from "../Utils/Validation/userValidation.js";
+import {
+  userCreateSchema,
+  userUpdateSchema,
+  userUpdatePassSchema,
+} from "../Utils/Validation/userValidation.js";
 const userRouter = express.Router();
 /**
  * @swagger
@@ -57,7 +61,7 @@ const userRouter = express.Router();
  *       201:
  *         description: User successfully registered
  */
-userRouter.post("/signup", validationMiddleware(userValidationSchema), signup);
+userRouter.post("/signup", validationMiddleware(userCreateSchema), signup);
 
 /**
  * @swagger
@@ -142,7 +146,7 @@ userRouter.put("/resetPassword/:token", resetPassword);
 userRouter.put(
   "/updateMyPasswrod",
   protect,
-  validationMiddleware(userValidationSchema),
+  validationMiddleware(userUpdatePassSchema),
   updateMyPassword
 );
 
@@ -171,7 +175,7 @@ userRouter.get("/me", protect, getMe);
 userRouter.put(
   "/updateMe",
   protect,
-  validationMiddleware(userValidationSchema),
+  validationMiddleware(userUpdateSchema),
   updateMe
 );
 
@@ -211,7 +215,7 @@ userRouter
   .get(protect, restrictTo("admin"), getAllUsers)
   .post(
     protect,
-    validationMiddleware(userValidationSchema),
+    validationMiddleware(userCreateSchema),
     restrictTo("admin"),
     createUser
   );
@@ -242,7 +246,7 @@ userRouter
   .route("/users/:id")
   .put(
     protect,
-    validationMiddleware(userValidationSchema),
+    validationMiddleware(userUpdateSchema),
     restrictTo("admin"),
     updateUser
   )
