@@ -2,35 +2,21 @@ import cartModel from "../Models/cartModel.js";
 import ProductModel from "../Models/productModel.js";
 import catchError from "../Middelwares/catchError.js";
 import AppError from "../Utils/appError.js";
+import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
 // Add or update cart
 export const createCart = catchError(async (req, res, next) => {
   const { titleCart, items } = req.body;
-
   // Validate each item in the cart
   const itemDetails = [];
   for (const item of items) {
     const product = await ProductModel.findById(item.productId);
-    if (!product) {
-      return next(
-        new AppError(`Product with ID ${item.productId} not found`, 404)
-      );
-    }
+    if (!product) return next(new AppError(`Product with ID ${item.productId} not found`, 404));
     if (product.quantity < item.quantity) {
-      return next(
-        new AppError(
-          `Insufficient stock for product ${product.name}. Available: ${product.quantity}, Requested: ${item.quantity}`,
-          400
-        )
-      );
+    return next(new AppError(`Insufficient stock for product ${product.name}. Available: ${product.quantity}, Requested: ${item.quantity}`,400));
     }
-    itemDetails.push({
-      productId: item.productId,
-      quantity: item.quantity,
-      priceAtTime: product.price,
-    });
+    itemDetails.push({productId: item.productId, quantity: item.quantity, priceAtTime: product.price,});
   }
-
   // Check if user has an existing cart that hasn't been converted to an order
   let cart = await cartModel.findOne({ userId: req.user._id });
 
@@ -43,14 +29,7 @@ export const createCart = catchError(async (req, res, next) => {
       if (existingItem) {
         // Update quantity if product already exists in cart
         existingItem.quantity += newItem.quantity;
-        if (existingItem.quantity > 100) {
-          return next(
-            new AppError(
-              `Total quantity for product ${newItem.productId} cannot exceed 100`,
-              400
-            )
-          );
-        }
+        if (existingItem.quantity > 100) return next(new AppError(`Total quantity for product ${newItem.productId} cannot exceed 100`,400));
         existingItem.priceAtTime = newItem.priceAtTime; // Update price if changed
       } else {
         // Add new item to cart
@@ -70,73 +49,72 @@ export const createCart = catchError(async (req, res, next) => {
       items: itemDetails,
     });
   }
-
   res.status(201).json({ message: "Cart Updated Successfully", data: cart });
 });
 
 // Get cart by ID
-export const getCart = catchError(async (req, res) => {
-  const cart = await cartModel
-    .findById(req.params.cartId)
-    .populate("items.productId", "name price");
-  if (!cart) return res.status(404).json({ message: "Cart not found" });
-
-  if (cart.userId.toString() !== req.user._id.toString()) {
-    return res
-      .status(403)
-      .json({ message: "Not authorized to view this cart" });
-  }
-
+export const getCart = catchError(async (req, res, next) => {
+  const cart = await cartModel.findOne({ userId: req.user._id }).populate("items.productId", "name price");
+  if (!cart) return next(new AppError("Cart not found",404));
+  if (cart.userId.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to view this cart",403)) 
   res.status(200).json({ message: "Cart retrieved successfully", data: cart });
 });
 
-// Get all carts of a user
-export const getCarts = catchError(async (req, res) => {
-  const carts = await cartModel.find({ userId: req.user._id });
-  if (!carts || carts.length === 0)
-    return res.status(404).json({ message: "No carts found" });
-
-  res
-    .status(200)
-    .json({ message: "Carts retrieved successfully", data: carts });
+// Get all carts In DB
+export const getCarts = catchError(async (req, res, next) => {
+    const query = req.query;
+    const filter = filterQuery(query);
+    const { skip, limit } = paginateQuery(query);
+    const sort = sortQuery(query);
+    const carts = await cartModel.find(filter).skip(skip).limit(limit).sort(sort)
+                        .populate("userId", "name")
+                        .populate("items.productId", "name price");
+    if (!carts || carts.length === 0) return next (new AppError( "No carts found",404 ));
+    const total = await cartModel.countDocuments(filter);
+    res.status(200).json({ total, page: query.page|| 1 , limit: query.limit|| 2 , data: carts });
 });
-
-// Update cart
-export const updateCart = catchError(async (req, res) => {
-  const cart = await cartModel.findById(req.params.cartId);
-  if (!cart) return res.status(404).json({ message: "Cart not found" });
-
-  if (cart.userId.toString() !== req.user._id.toString()) {
-    return res
-      .status(403)
-      .json({ message: "Not authorized to update this cart" });
-  }
-
-  Object.assign(cart, req.body);
+// update Quantity
+export const updateCartItemQuantity = catchError(async (req, res, next) => {
+  const { cartId, productId } = req.params;
+  const { quantity } = req.body;
+  if (!quantity || quantity <= 0) return next(new AppError("Quantity must be greater than 0", 400));
+  const cart = await cartModel.findById(cartId);
+  if (!cart) return next(new AppError("Cart not found", 404));
+  if (cart.userId.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to update this cart", 403));
+  const item = cart.items.find((i) => i.productId.toString() === productId);
+  if (!item) return next(new AppError("Product not found in cart", 404));
+  item.quantity = quantity;
   await cart.save();
-  res.status(200).json({ message: "Cart updated successfully", data: cart });
+  res.status(200).json({message: "Product quantity updated successfully",data: item,});
 });
-
-// Delete a single cart
-export const deleteCart = catchError(async (req, res) => {
-  const cart = await cartModel.findById(req.params.cartId);
-  if (!cart) return res.status(404).json({ message: "Cart not found" });
-
-  if (cart.userId.toString() !== req.user._id.toString()) {
-    return res
-      .status(403)
-      .json({ message: "Not authorized to delete this cart" });
+// delete item from cart 
+export const removeCartItem = catchError(async (req, res, next) => {
+  const { cartId, productId } = req.params;
+  const cart = await cartModel.findById(cartId);
+  if (!cart) return next(new AppError("Cart not found", 404));
+  if (cart.userId.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to update this cart", 403));
+  const itemIndex = cart.items.findIndex((item) => item.productId.toString() === productId.toString());
+  if (itemIndex === -1) return next(new AppError("Product not found in cart", 404));
+  cart.items.splice(itemIndex, 1);
+  if (cart.items.length === 0) {await cart.deleteOne();return res.status(200)
+    .json({message: "Product removed successfully, cart deleted because it was empty",});
   }
-
-  await cartModel.findByIdAndDelete(cart._id);
-
-  res.status(200).json({ message: "Cart Deleted Successfully", data: cart });
+  await cart.save();
+  res.status(200).json({message: "Product removed successfully",items: cart.items,});
+});
+// Delete a single cart Of User
+export const deleteCart = catchError(async (req, res, next) => {
+  const { cartId } = req.params;
+  const cart = await cartModel.findById(cartId);
+  if (!cart) return next(new AppError("Cart not found", 404));
+  if (cart.userId.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to delete this cart", 403));
+  await cartModel.findByIdAndDelete(cartId);
+  res.status(200).json({message: "Cart Deleted Successfully",data: cart,});
+});
+// Delete all carts In DB
+export const deleteCarts = catchError(async (req, res, next) => {
+  const result = await cartModel.deleteMany({}); 
+  if (result.deletedCount === 0) return next(new AppError("No carts found to delete", 404));
+  res.status(200).json({message: "All carts in the database deleted successfully",deletedCount: result.deletedCount,});
 });
 
-// Delete all carts of a user
-export const deleteCarts = catchError(async (req, res) => {
-  const deletedCarts = await cartModel.deleteMany({ userId: req.user._id });
-  res.status(200).json({
-    message: "All Carts Of The User Deleted Successfully",
-  });
-});
