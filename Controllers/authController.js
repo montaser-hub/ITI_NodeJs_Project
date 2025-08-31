@@ -5,8 +5,7 @@ import User from "../Models/userModel.js";
 import catchError from "../Middelwares/catchError.js";
 import sendEmail from "../Utils/Email.js";
 import crypto from "crypto";
-import AppError from "../Utils/apiError.js";
-
+import AppError from "../Utils/appError.js";
 
 //function to sign token with user id as payload and secret from env file and expires in also from env file to follow DRY principle
 export const signToken = (id) => {
@@ -68,7 +67,7 @@ export const login = catchError(async (req, res, next) => {
   const { email, password } = req.body;
   //1) Check if email and password exist
   if (!email || !password) {
-    return next(new AppError("Please provide email and password!",400));
+    return next(new AppError("Please provide email and password!", 400));
   }
   //2) Check if user exists && password is correct
   const user = await User.findOne({ email }).select("+password"); //to select the password field which has select: false in userModel
@@ -213,7 +212,10 @@ export const protect = catchError(async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
     return next(
-      new AppError("The user belonging to this token does no longer exist.", 401)
+      new AppError(
+        "The user belonging to this token does no longer exist.",
+        401
+      )
     );
   }
 
@@ -268,7 +270,10 @@ export const forgetPassword = catchError(async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     return next(
-      new AppError("There was an error sending the email. Try again later!", 500)
+      new AppError(
+        "There was an error sending the email. Try again later!",
+        500
+      )
     );
   }
 });

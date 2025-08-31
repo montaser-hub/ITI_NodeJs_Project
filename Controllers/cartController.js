@@ -1,6 +1,6 @@
 import cartModel from "../Models/cartModel.js";
 import catchError from "../Middelwares/catchError.js";
-import apiError from "../Utils/apiError.js";
+import appError from "../Utils/appError.js";
 
 // create cart
 export const createCart = catchError(async (req, res) => {
@@ -23,7 +23,7 @@ export const getCarts = catchError(async (req, res) => {
 export const updateCart = catchError(async (req, res) => {
   const cart = await findCartById(req.params.cartId);
   if (!cart) return res.status(404).json({ message: "Cart not found" });
-  Object.assign(cart, req.body); 
+  Object.assign(cart, req.body);
   await cart.save();
   res.status(200).json({ message: "Cart updated successfully", data: cart });
 });
@@ -31,23 +31,19 @@ export const updateCart = catchError(async (req, res) => {
 export const deleteCart = catchError(async (req, res) => {
   const cart = await findCartById(req.params.cartId);
   const deletedCart = await cartModel.findByIdAndDelete(cart);
-  res
-    .status(200)
-    .json({
-      message: "Cart Deleted Successfully And Related Products Deleted",
-      data: deletedCart,
-    });
+  res.status(200).json({
+    message: "Cart Deleted Successfully And Related Products Deleted",
+    data: deletedCart,
+  });
 });
 // Delete Carts
 export const deleteCarts = catchError(async (req, res) => {
   const deletedCart = await cartModel.deleteMany({ userId: req.params.userId });
-  res
-    .status(200)
-    .json({
-      message:
-        "All Carts Of The User Deleted Successfully And Related Products Deleted",
-      data: deletedCart,
-    });
+  res.status(200).json({
+    message:
+      "All Carts Of The User Deleted Successfully And Related Products Deleted",
+    data: deletedCart,
+  });
 });
 
 async function findCartById(id) {

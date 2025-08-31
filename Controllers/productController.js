@@ -2,7 +2,7 @@
 import catchError from "../Middelwares/catchError.js";
 import ProductModel from "../Models/productModel.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
-import appError from "../Utils/apiError.js";
+import appError from "../Utils/appError.js";
 
 // Get products with pagination
 const getProducts = catchError(async (req, res) => {

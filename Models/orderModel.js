@@ -115,7 +115,7 @@ orderSchema.pre("validate", async function (next) {
 // Before saving the order, calculate the total price = Sum of (Price x Quantity) + Shipping Price
 orderSchema.pre("save", function (next) {
   if (!this.cartItems || this.cartItems.length === 0) {
-    return next(new apiError("Order must have at least one cart item", 400));
+    return next(new appError("Order must have at least one cart item", 400));
   }
   if (this.cartItems?.length) {
     const subtotal = this.cartItems.reduce(
@@ -125,7 +125,7 @@ orderSchema.pre("save", function (next) {
     this.totalOrderPrice = subtotal + this.shippingPrice;
   }
   if (this.totalOrderPrice <= 0) {
-    return next(new apiError("Order total price must be greater than 0", 400));
+    return next(new appError("Order total price must be greater than 0", 400));
   }
   next();
 });

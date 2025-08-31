@@ -1,22 +1,18 @@
 import categoryModel from "../Models/categoryModel.js";
 import catchError from "../Middelwares/catchError.js";
-import apiError from "../Utils/apiError.js";
+import appError from "../Utils/appError.js";
 import productModel from "../Models/productModel.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
 // Helper function to find category by ID
-async function findCategoryById(id) {
+async function findCategoryById(id,next) {
   const category = await categoryModel.findById(id); //.lean();
-  if (!category) {
-    const error = new apiError("Category not found");
-    error.statusCode = 404;
-    throw error;
-  }
+  if (!category) return next(new appError("Category not found", 404));
   return category;
 }
 
 // GET /categories
-export const getCategories = catchError(async (req, res) => {
+export const getCategories = catchError(async (req, res, next) => {
   const query = req.query;
   const filter = filterQuery(query);
   const { skip, limit } = paginateQuery(query);
@@ -44,15 +40,15 @@ export const getCategories = catchError(async (req, res) => {
 });
 
 // GET /categories/:id
-export const getCategory = catchError(async (req, res) => {
-  const category = await findCategoryById(req.params.id);
+export const getCategory = catchError(async (req, res, next) => {
+  const category = await findCategoryById(req.params.id, next);
   res
     .status(200)
     .json({ message: "Category retrieved successfully", data: category });
 });
 
 // POST /categories
-export const createCategory = catchError(async (req, res) => {
+export const createCategory = catchError(async (req, res, next) => {
   const category = await categoryModel.create(req.body);
   res
     .status(201)
@@ -60,8 +56,8 @@ export const createCategory = catchError(async (req, res) => {
 });
 
 // PUT /categories/:id
-export const updateCategory = catchError(async (req, res) => {
-  await findCategoryById(req.params.id);
+export const updateCategory = catchError(async (req, res,next) => {
+  await findCategoryById(req.params.id, next);
   const updatedCategory = await categoryModel.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -73,10 +69,10 @@ export const updateCategory = catchError(async (req, res) => {
 });
 
 // DELETE /categories/:id
-export const deleteCategory = catchError(async (req, res) => {
-  const category = await findCategoryById(req.params.id);
-  console.log(req.params.id);
-  await productModel.deleteMany({ category: category._id });
+export const deleteCategory = catchError(async (req, res, next) => {
+  const category = await findCategoryById(req.params.id, next);
+  
+  await productModel.deleteMany( { category: category._id } );
 
   await categoryModel.findByIdAndDelete(category._id);
 

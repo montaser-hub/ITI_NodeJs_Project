@@ -1,7 +1,7 @@
 import catchError from "../Middelwares/catchError.js";
 import { Order } from "../Models/orderModel.js";
 import { Payment } from "../Models/paymentsModel.js";
-import appError from "../Utils/apiError.js";
+import appError from "../Utils/appError.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
 // @desc    Place an order from the cart
@@ -27,7 +27,7 @@ const placeOrder = catchError(async (req, res, next) => {
 // @desc    View order history for the user
 // @route   GET /orders/myorders
 // @access  Private (User)
-late("cartItems.product", "name price")
+late("cartItems.product", "name price");
 
 const getMyOrders = catchError(async (req, res) => {
   const query = req.query;
@@ -85,7 +85,7 @@ const getOrderById = catchError(async (req, res, next) => {
   if (order) {
     res.json(order);
   } else {
-    return next(new apiError("Order not found", 404));
+    return next(new appError("Order not found", 404));
   }
 });
 
@@ -102,7 +102,7 @@ const updateOrderToDelivered = catchError(async (req, res, next) => {
     const updatedOrder = await order.save();
     res.json(updatedOrder);
   } else {
-    return next(new apiError("Order not found", 404));
+    return next(new appError("Order not found", 404));
   }
 });
 
@@ -132,7 +132,7 @@ const cancelOrder = catchError(async (req, res, next) => {
     const updatedOrder = await order.save();
     res.json(updatedOrder);
   } else {
-    return next(new apiError("Cannot cancel this order", 400));
+    return next(new appError("Cannot cancel this order", 400));
   }
 });
 
