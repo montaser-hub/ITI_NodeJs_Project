@@ -6,14 +6,14 @@ import {cartValidationSchema} from "../Utils/Validation/cartValidation.js"
 import {QuantityValidationSchema } from "../Utils/Validation/cartValidation.js"
 const cartRouter = express.Router();
 
-cartRouter.post("/carts",protect, validationMiddleware(cartValidationSchema) , createCart);
-cartRouter.route("/cart/:cartId")
+cartRouter.post("/",protect, validationMiddleware(cartValidationSchema) , createCart);
+cartRouter.route("/:cartId")
                 .get(protect,getCart)
                 .delete(protect,deleteCart);
-cartRouter.route("/cart/:cartId/items/:productId")
+cartRouter.route("/:cartId/items/:productId")
             .put(protect,validationMiddleware(QuantityValidationSchema ), updateCartItemQuantity)
             .delete(protect, removeCartItem)
-cartRouter.route("/carts")
+cartRouter.route("/")
                 .get(getCarts)
                 .delete(deleteCarts);
 export default cartRouter;

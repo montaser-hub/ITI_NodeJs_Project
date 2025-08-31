@@ -18,7 +18,13 @@ import AppError from "./Utils/appError.js";
 import globalErrorHandler from "./Controllers/errorController.js";
 const app = express();
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://localhost:5000"],
+    credentials: true,
+  })
+);
+
 app.use(hpp());
 // logging middleware in development environment
 if (process.env.NODE_ENV === "development") {
@@ -32,23 +38,14 @@ app.get("/", (req, res) => {
   res.send("Welcome to my API");
 });
 
-app.use(userRoutes);
-app.use(categoriesRouter);
-app.use(productRouter);
-app.use(cartRouter);
+app.use("/users", userRoutes);
+app.use("/categories", categoriesRouter);
+app.use("/products", productRouter);
+app.use("/carts", cartRouter);
 app.use("/orders", orderRoutes);
 app.use("/payments", paymentRoutes);
 
 app.get("/favicon.ico", (req, res) => res.status(204).end());
-
-
-app.get("/cancel", (req, res) => {
-  res.send("CANCELLED payment");
-});
-
-app.get("/success", (req, res) => {
-  res.send("SUCCESS payment");
-});
 
 // Swagger Docs Route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -56,6 +53,13 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/api-docs-json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);
+});
+app.get("/payments/cancel", (req, res) => {
+  res.send("CANCELLED payment");
+});
+
+app.get("/payments/success", (req, res) => {
+  res.send("SUCCESS payment");
 });
 
 app.all("/{*any}", (req, res, next) => {
