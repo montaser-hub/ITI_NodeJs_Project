@@ -13,7 +13,7 @@ import cartRouter from "./Routes/cartRoutes.js";
 import orderRoutes from "./Routes/orderRoutes.js";
 import paymentRoutes from "./Routes/paymentRoutes.js";
 
-import AppError from "./Utils/apiError.js";
+import AppError from "./Utils/appError.js";
 
 import globalErrorHandler from "./Controllers/errorController.js";
 const app = express();

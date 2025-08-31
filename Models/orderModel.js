@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import ProductModel from "./productModel.js";
+import AppError from "../utils/appError.js"; 
 
 const orderSchema = new mongoose.Schema(
   {

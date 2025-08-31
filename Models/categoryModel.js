@@ -29,5 +29,5 @@ const categorySchema = new mongoose.Schema(
 // Index for better query performance
 // categorySchema.index({ name: 1 }, { unique: true });
 
-const categoryModel = mongoose.model("category", categorySchema);
+const categoryModel = mongoose.model("Category", categorySchema);
 export default categoryModel;

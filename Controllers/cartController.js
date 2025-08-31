@@ -87,6 +87,7 @@ export const getCart = catchError(async (req, res) => {
       .json({ message: "Not authorized to view this cart" });
   }
 
+  const cart = await findCartById(req.params.cartId);
   res.status(200).json({ message: "Cart retrieved successfully", data: cart });
 });
 
@@ -99,6 +100,7 @@ export const getCarts = catchError(async (req, res) => {
   res
     .status(200)
     .json({ message: "Carts retrieved successfully", data: carts });
+
 });
 
 // Update cart
@@ -114,7 +116,6 @@ export const updateCart = catchError(async (req, res) => {
 
   Object.assign(cart, req.body);
   await cart.save();
-
   res.status(200).json({ message: "Cart updated successfully", data: cart });
 });
 
@@ -139,6 +140,6 @@ export const deleteCarts = catchError(async (req, res) => {
   const deletedCarts = await cartModel.deleteMany({ userId: req.user._id });
   res.status(200).json({
     message: "All Carts Of The User Deleted Successfully",
-    data: deletedCarts,
   });
 });
+
