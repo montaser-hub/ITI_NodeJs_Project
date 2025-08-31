@@ -39,9 +39,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/users", userRoutes);
-app.use("/categories",categoriesRouter);
+app.use("/categories", categoriesRouter);
 app.use("/products", productRouter);
-app.use("/carts",cartRouter);
+app.use("/carts", cartRouter);
 app.use("/orders", orderRoutes);
 app.use("/payments", paymentRoutes);
 
@@ -53,6 +53,13 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/api-docs-json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);
+});
+app.get("/payments/cancel", (req, res) => {
+  res.send("CANCELLED payment");
+});
+
+app.get("/payments/success", (req, res) => {
+  res.send("SUCCESS payment");
 });
 
 app.all("/{*any}", (req, res, next) => {
