@@ -1,7 +1,7 @@
 import { Payment } from "../Models/paymentsModel.js";
 import { Order } from "../Models/orderModel.js";
 import fetch from "node-fetch";
-
+import AppError from "../Utils/appError.js";
 
 async function getPayPalAccessToken() {
   const auth = Buffer.from(
@@ -22,7 +22,7 @@ async function getPayPalAccessToken() {
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to get PayPal access token");
+    throw new AppError("Failed to get PayPal access token", 401);
   }
   return data.access_token;
 }
@@ -32,24 +32,10 @@ async function getPayPalAccessToken() {
  * @route POST /api/payments/paypal/:orderId
  * @access Private
  */
-const createPayPalPayment = async (req, res) => {
+const createPayPalPayment = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.orderId);
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
-    }
-
-    const payment = new Payment({
-      orderId: order._id,
-      provider: "paypal",
-      amount: order.totalOrderPrice,
-      currency: "USD",
-      status: "pending",
-    });
-
-    await payment.save();
-    order.payment = payment._id;
-    await order.save();
+    if (!order) return next(new AppError("Order not found", 404));
 
     const accessToken = await getPayPalAccessToken();
     const response = await fetch(
@@ -72,8 +58,8 @@ const createPayPalPayment = async (req, res) => {
             },
           ],
           application_context: {
-            return_url: "http://localhost:5000/success",
-            cancel_url: "http://localhost:5000/cancel",
+            return_url: `${process.env.URL}/success`,
+            cancel_url: `${process.env.URL}/cancel`,
           },
         }),
       }
@@ -86,13 +72,11 @@ const createPayPalPayment = async (req, res) => {
         .json({ error: "Failed to create PayPal order", details: data });
     }
 
-    payment.transactionReference = data.id;
-    await payment.save();
+    order.paypalOrderId = data.id;
+    await order.save();
 
     const approveLink = data.links.find((l) => l.rel === "approve")?.href;
-    if (!approveLink) {
-      return res.status(500).json({ error: "No approve link found" });
-    }
+    if (!approveLink) return next(new AppError("No approve link found", 404));
 
     res.json({ url: approveLink });
   } catch (err) {
@@ -105,7 +89,7 @@ const createPayPalPayment = async (req, res) => {
  * @route POST /api/payments/paypal/webhook
  * @access Public
  */
-const paypalWebhook = async (req, res) => {
+const paypalWebhook = async (req, res, next) => {
   try {
     const event = req.body;
     const requiredHeaders = [
@@ -117,9 +101,8 @@ const paypalWebhook = async (req, res) => {
     ];
 
     for (const header of requiredHeaders) {
-      if (!req.headers[header]) {
-        return res.status(400).send(`Missing required header: ${header}`);
-      }
+      if (!req.headers[header])
+        return next(new AppError(`Missing required header: ${header}`, 400));
     }
 
     const verifyPayload = {
@@ -146,10 +129,11 @@ const paypalWebhook = async (req, res) => {
     );
 
     const verifyResponse = await response.json();
-    if (!response.ok || verifyResponse.verification_status !== "SUCCESS") {
-      return res.status(400).send("Webhook verification failed");
-    }
+
+    if (!response.ok || verifyResponse.verification_status !== "SUCCESS")
+      return next(new AppError("Webhook verification faild", 400));
     let orderObjectId;
+
     switch (event.event_type) {
       case "PAYMENT.CAPTURE.COMPLETED":
       case "CHECKOUT.ORDER.APPROVED": {
@@ -158,37 +142,65 @@ const paypalWebhook = async (req, res) => {
           event.resource?.purchase_units?.[0]?.custom_id;
         const captureId = event.resource?.id;
 
-        if (!orderId) {
-          break;
-        }
-        const order = await Order.findById(orderObjectId);
-        const payment = await Payment.findOne({ orderId: orderObjectId });
+        if (!orderId) break;
 
-        if (order && payment) {
+        const order = await Order.findById(orderId);
+        if (!order) break;
+
+        let payment = await Payment.findOne({ orderId: order._id });
+        if (!payment) {
+          payment = new Payment({
+            orderId: order._id,
+            provider: "paypal",
+            amount: order.totalOrderPrice,
+            currency: "USD",
+            status: "success",
+            transactionReference: captureId,
+          });
+          await payment.save();
+          order.payment = payment._id;
+        } else {
           payment.status = "success";
           payment.transactionReference =
             captureId || payment.transactionReference;
           await payment.save();
-
-          order.isPaid = true;
-          order.paidAt = Date.now();
-          order.status = "paid";
-          await order.save();
         }
+
+        order.isPaid = true;
+        order.paidAt = Date.now();
+        order.status = "paid";
+        await order.save();
+
         break;
       }
 
       case "PAYMENT.CAPTURE.DENIED":
       case "PAYMENT.CAPTURE.REFUNDED": {
         const orderId = event.resource?.custom_id;
-        if (!orderId) {
-          break;
-        }
-        const payment = await Payment.findOne({ orderId: orderObjectId });
-        if (payment) {
+        if (!orderId) break;
+
+        const order = await Order.findById(orderId);
+        if (!order) break;
+
+        let payment = await Payment.findOne({ orderId: order._id });
+        if (!payment) {
+          payment = new Payment({
+            orderId: order._id,
+            provider: "paypal",
+            amount: order.totalOrderPrice,
+            currency: "USD",
+            status: "failed",
+          });
+          await payment.save();
+          order.payment = payment._id;
+        } else {
           payment.status = "failed";
           await payment.save();
         }
+
+        order.status = "payment_failed";
+        await order.save();
+
         break;
       }
 
@@ -198,7 +210,7 @@ const paypalWebhook = async (req, res) => {
 
     res.sendStatus(200);
   } catch (err) {
-    res.status(500).send("Server Error");
+    return next(new AppError(`server Error ${err.mesage}`, 500));
   }
 };
 
@@ -207,26 +219,20 @@ const paypalWebhook = async (req, res) => {
  * @route GET /api/payments/paypal/capture/:orderId
  * @access Public
  */
-const capturePayPalPayment = async (req, res) => {
+const capturePayPalPayment = async (req, res, next) => {
   try {
     const { orderId } = req.params;
     const { token } = req.query;
 
-    if (!token) {
-      return res.status(400).json({ error: "No token provided" });
-    }
+    if (!token) return next(new AppError("No token provided", 400));
 
     const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
-    }
+    if (!order) return next(new AppError("Order not found", 404));
 
     const payment = await Payment.findOne({
       orderId: new mongoose.Types.ObjectId(orderId),
     });
-    if (!payment) {
-      return res.status(404).json({ error: "Payment not found" });
-    }
+    if (!payment) return next(new AppError("Payment not found", 404));
 
     const accessToken = await getPayPalAccessToken();
     const response = await fetch(
@@ -241,11 +247,8 @@ const capturePayPalPayment = async (req, res) => {
     );
 
     const data = await response.json();
-    if (!response.ok) {
-      return res
-        .status(500)
-        .json({ error: "Failed to capture payment", details: data });
-    }
+    if (!response.ok)
+      return next(new AppError(`Failed to capture payment : ${data}`, 500));
 
     payment.status = "success";
     payment.transactionReference = data.id || payment.transactionReference;
@@ -258,7 +261,7 @@ const capturePayPalPayment = async (req, res) => {
 
     res.redirect("/success");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return next(new AppError(`server Error ${err.mesage}`, 500));
   }
 };
 

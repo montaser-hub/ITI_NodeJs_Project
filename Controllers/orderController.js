@@ -1,12 +1,13 @@
-import catchError from "../Middelwares/catchAsync.js";
+import catchError from "../Middelwares/catchError.js";
 import { Order } from "../Models/orderModel.js";
 import { Payment } from "../Models/paymentsModel.js";
+import AppError from "../Utils/appError.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
 // @desc    Place an order from the cart
 // @route   POST /orders
 // @access  Private (User)
-const placeOrder = catchError(async (req, res) => {
+const placeOrder = catchError(async (req, res, next) => {
   const { cartItems, shippingAddress, shippingPrice, paymentMethodType } =
     req.body;
 
@@ -26,6 +27,7 @@ const placeOrder = catchError(async (req, res) => {
 // @desc    View order history for the user
 // @route   GET /orders/myorders
 // @access  Private (User)
+
 const getMyOrders = catchError(async (req, res) => {
   const query = req.query;
   const { skip, limit } = paginateQuery(query);
@@ -73,7 +75,7 @@ const getOrders = catchError(async (req, res) => {
 // @desc    Get order by ID and track status
 // @route   GET /orders/:id
 // @access  Private (User/Admin)
-const getOrderById = catchError(async (req, res) => {
+const getOrderById = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id)
     .populate("user", "name email")
     .populate("cartItems.product", "name price")
@@ -82,15 +84,14 @@ const getOrderById = catchError(async (req, res) => {
   if (order) {
     res.json(order);
   } else {
-    res.status(404);
-    throw new Error("Order not found");
+    return next(new AppError("Order not found", 404));
   }
 });
 
 // @desc    Update order to delivered
 // @route   PUT /orders/:id/deliver
 // @access  Private (Admin)
-const updateOrderToDelivered = catchError(async (req, res) => {
+const updateOrderToDelivered = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
 
   if (order) {
@@ -100,20 +101,18 @@ const updateOrderToDelivered = catchError(async (req, res) => {
     const updatedOrder = await order.save();
     res.json(updatedOrder);
   } else {
-    res.status(404);
-    throw new Error("Order not found");
+    return next(new AppError("Order not found", 404));
   }
 });
 
 // @desc    Cancel an order
 // @route   PUT /orders/:id/cancel
 // @access  Private (User)
-const cancelOrder = catchError(async (req, res) => {
+const cancelOrder = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
 
   if (
     order &&
-    order.user.toString() === req.user._id.toString() &&
     order.user.toString() === req.user._id.toString() &&
     !order.isPaid &&
     !order.isDelivered &&
@@ -132,8 +131,7 @@ const cancelOrder = catchError(async (req, res) => {
     const updatedOrder = await order.save();
     res.json(updatedOrder);
   } else {
-    res.status(400);
-    throw new Error("Cannot cancel this order");
+    return next(new AppError("Cannot cancel this order", 400));
   }
 });
 

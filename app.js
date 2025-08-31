@@ -13,7 +13,7 @@ import cartRouter from "./Routes/cartRoutes.js";
 import orderRoutes from "./Routes/orderRoutes.js";
 import paymentRoutes from "./Routes/paymentRoutes.js";
 
-import AppError from "./Utils/apiError.js";
+import AppError from "./Utils/appError.js";
 
 import globalErrorHandler from "./Controllers/errorController.js";
 const app = express();
@@ -28,9 +28,9 @@ if (process.env.NODE_ENV === "development") {
 
 app.use(express.json());
 
-app.use( userRoutes);
-app.use( categoriesRouter);
-app.use( productRouter); 
+app.use(userRoutes);
+app.use(categoriesRouter);
+app.use(productRouter);
 app.use(cartRouter);
 app.use("/orders", orderRoutes);
 app.use("/payments", paymentRoutes);
@@ -50,10 +50,6 @@ app.get("/api-docs-json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);
 });
-
-
-
-
 
 app.all("/{*any}", (req, res, next) => {
   next(new AppError(`Can not find ${req.originalUrl} on this server`, 404));

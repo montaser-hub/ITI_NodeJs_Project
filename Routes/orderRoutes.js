@@ -16,7 +16,7 @@ const router = express.Router();
 router
   .route("/")
   .post(protect, validationMiddleware(validateOrderSchema), placeOrder)
-  .get(protect, getOrders);
+  .get(protect, restrictTo("admin"), getOrders);
 
 router.route("/myorders").get(protect, getMyOrders);
 router.route("/:id").get(protect, getOrderById);

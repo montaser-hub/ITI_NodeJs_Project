@@ -1,4 +1,12 @@
-const allowedFilterFields = ['age','name', 'email', 'isConfirmed', 'active','role']; // Add valid filter fields
+import AppError from "../Utils/appError.js";
+const allowedFilterFields = [
+  "age",
+  "name",
+  "email",
+  "isConfirmed",
+  "active",
+  "role",
+]; // Add valid filter fields
 
 const allowedOperators = ["gte", "gt", "lte", "lt", "in", "ne"];
 
@@ -20,7 +28,7 @@ const filterQuery = (queryString) => {
 
     // Validate allowed filter fields
     if (!allowedFilterFields.includes(key) && !key.includes("__")) {
-      throw new Error(`Invalid filter field: ${key}`);
+      throw new AppError(`Invalid filter field: ${key}`);
     }
   });
 
@@ -28,7 +36,7 @@ const filterQuery = (queryString) => {
   let queryStr = JSON.stringify(queryObject);
   queryStr = queryStr.replace(/\b(gte|gt|lt|lte|in|ne)\b/g, (match) => {
     if (!allowedOperators.includes(match)) {
-      throw new Error(`Invalid filter operator: ${match}`);
+      throw new AppError(`Invalid filter operator: ${match}`);
     }
     return `$${match}`; // MongoDB operator syntax
   });
@@ -63,9 +71,9 @@ const sortQuery = (queryString) => {
 // Function for pagination
 const paginateQuery = (queryString) => {
   if (!queryString || queryString.all) {
-    return {page: 1, skip: 0, limit: 0 }; // This tells the DB: no pagination
+    return { page: 1, skip: 0, limit: 0 }; // This tells the DB: no pagination
   }
-  const page =parseInt(queryString.page) || 1; // Default to page 1
+  const page = parseInt(queryString.page) || 1; // Default to page 1
   const limit = parseInt(queryString.limit) || 100; // Default to 100 items per page
   const skip = (page - 1) * limit;
 
