@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 import catchError from "../Middelwares/catchError.js";
 import AppError from "../Utils/appError.js";
 
-// Validate environment variables
+// Make sure all required environment variables are present.
 const validateEnvVars = () => {
   const requiredEnvVars = [
     "PAYPAL_CLIENT_ID",
@@ -19,13 +19,20 @@ const validateEnvVars = () => {
   }
 };
 
-// Get PayPal access token
+// Go to PayPal and retrieve an Access Token using your client_id and client_secret.
+// This token is necessary to make any API calls with PayPal.
 async function getPayPalAccessToken() {
   validateEnvVars();
+  // Create the Authorization Header
   const auth = Buffer.from(
     `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
   ).toString("base64");
 
+  /**
+   * Depending on your environment:
+   * Sandbox (for testing) → https://api-m.sandbox.paypal.com/v1/oauth2/token
+   * Live (real) → https://api-m.paypal.com/v1/oauth2/token
+   */
   const response = await fetch(
     `${process.env.PAYPAL_BASE_URL}/v1/oauth2/token`,
     {
@@ -75,6 +82,7 @@ export const createPayPalPayment = catchError(async (req, res, next) => {
   }
 
   const accessToken = await getPayPalAccessToken();
+  // This line creates an order in PayPal using Bearer token.
   const response = await fetch(
     `${process.env.PAYPAL_BASE_URL}/v2/checkout/orders`,
     {
@@ -95,8 +103,8 @@ export const createPayPalPayment = catchError(async (req, res, next) => {
           },
         ],
         application_context: {
-          return_url: `${process.env.URL}/success`,
-          cancel_url: `${process.env.URL}/cancel`,
+          return_url: `${process.env.URL}/payments/success`,
+          cancel_url: `${process.env.URL}/payments/cancel`,
         },
       }),
     }
@@ -129,7 +137,9 @@ export const createPayPalPayment = catchError(async (req, res, next) => {
  * @access Public
  */
 export const paypalWebhook = catchError(async (req, res, next) => {
+  // event is The data you sent to PayPal (such as event_type, resource, etc.).
   const event = req.body;
+  // The basic header that PayPal must send with every webhook so you can verify that the message is authentic.
   const requiredHeaders = [
     "paypal-auth-algo",
     "paypal-cert-url",
@@ -145,6 +155,7 @@ export const paypalWebhook = catchError(async (req, res, next) => {
   }
 
   validateEnvVars();
+  // This body is sent to the PayPal API to tell them: "Verify that this webhook is really from you and not fake."
   const verifyPayload = {
     auth_algo: req.headers["paypal-auth-algo"],
     cert_url: req.headers["paypal-cert-url"],
@@ -155,6 +166,7 @@ export const paypalWebhook = catchError(async (req, res, next) => {
     webhook_event: event,
   };
 
+  // Sends a verifyPayload to PayPal.
   const accessToken = await getPayPalAccessToken();
   const response = await fetch(
     `${process.env.PAYPAL_BASE_URL}/v1/notifications/verify-webhook-signature`,
@@ -168,6 +180,7 @@ export const paypalWebhook = catchError(async (req, res, next) => {
     }
   );
 
+  // If the response is not SUCCESS, the webhook is untrusted (fake/manipulated).
   const verifyResponse = await response.json();
   if (!response.ok || verifyResponse.verification_status !== "SUCCESS") {
     return next(new AppError("Webhook verification failed", 400));
@@ -176,9 +189,11 @@ export const paypalWebhook = catchError(async (req, res, next) => {
   switch (event.event_type) {
     case "PAYMENT.CAPTURE.COMPLETED":
     case "CHECKOUT.ORDER.APPROVED": {
+      // custom_id = the order number you sent with the payment (linked to the database)
       const orderId =
         event.resource?.custom_id ||
         event.resource?.purchase_units?.[0]?.custom_id;
+      // captureId = PayPal transaction number (Transaction ID).
       const captureId = event.resource?.id;
 
       if (!orderId) {
@@ -265,78 +280,4 @@ export const paypalWebhook = catchError(async (req, res, next) => {
   }
 
   res.sendStatus(200);
-});
-
-/**
- * @desc Capture PayPal Payment
- * @route GET /api/payments/paypal/capture/:orderId
- * @access Private
- */
-export const capturePayPalPayment = catchError(async (req, res, next) => {
-  const { orderId } = req.params;
-  const { token } = req.query;
-
-  if (!token) {
-    return next(new AppError("No token provided", 400));
-  }
-
-  const order = await Order.findById(orderId);
-  if (!order) {
-    return next(new AppError("Order not found", 404));
-  }
-
-  // Check order ownership
-  if (order.user.toString() !== req.user._id.toString()) {
-    return next(
-      new AppError("Not authorized to capture payment for this order", 403)
-    );
-  }
-
-  // Check order status
-  if (order.isPaid || order.isCancelled || order.isDelivered) {
-    return next(
-      new AppError(
-        "Order cannot be paid: already paid, cancelled, or delivered",
-        400
-      )
-    );
-  }
-
-  const payment = await Payment.findOne({ orderId: order._id });
-  if (!payment) {
-    return next(new AppError("Payment not found", 404));
-  }
-
-  const accessToken = await getPayPalAccessToken();
-  const response = await fetch(
-    `${process.env.PAYPAL_BASE_URL}/v2/checkout/orders/${token}/capture`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
-
-  const data = await response.json();
-  if (!response.ok) {
-    return next(
-      new AppError(
-        `Failed to capture payment: ${data.error || "Unknown error"}`,
-        500
-      )
-    );
-  }
-
-  payment.status = "success";
-  payment.transactionReference = data.id || payment.transactionReference;
-  await payment.save();
-
-  order.isPaid = true;
-  order.paidAt = Date.now();
-  order.status = "paid";
-  await order.save();
-
-  res.redirect("/success");
 });
