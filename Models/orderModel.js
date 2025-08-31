@@ -80,57 +80,6 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true, versionKey: false }
 );
-
-orderSchema.pre("validate", async function (next) {
-  try {
-    if (!this.cartItems || this.cartItems.length === 0) {
-      return next(new Error("Order must have at least one cart item"));
-    }
-
-    for (const item of this.cartItems) {
-      if (!item.price) {
-        const product = await ProductModel.findById(item.product);
-        if (!product) {
-          return next(new Error(`Product not found for ID: ${item.product}`));
-        }
-        item.price = product.price;
-      }
-    }
-
-    const subtotal = this.cartItems.reduce(
-      (sum, i) => sum + i.price * i.quantity,
-      0
-    );
-    this.totalOrderPrice = subtotal + this.shippingPrice;
-
-    if (this.totalOrderPrice <= 0) {
-      return next(new Error("Order total price must be greater than 0"));
-    }
-
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Before saving the order, calculate the total price = Sum of (Price x Quantity) + Shipping Price
-orderSchema.pre("save", function (next) {
-  if (!this.cartItems || this.cartItems.length === 0) {
-    return next(new AppError("Order must have at least one cart item", 400));
-  }
-  if (this.cartItems?.length) {
-    const subtotal = this.cartItems.reduce(
-      (sum, i) => sum + i.price * i.quantity,
-      0
-    );
-    this.totalOrderPrice = subtotal + this.shippingPrice;
-  }
-  if (this.totalOrderPrice <= 0) {
-    return next(new AppError("Order total price must be greater than 0", 400));
-  }
-  next();
-});
-
 // Index to speed up fetching all requests for a specific user
 orderSchema.index({ user: 1, createdAt: -1 });
 
