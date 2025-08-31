@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import apiError from "../Utils/apiError"
 
 const orderSchema = new mongoose.Schema(
   {
@@ -43,7 +44,6 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: [1, "Order total price must be greater than 0"],
-
     },
 
     paymentMethodType: {
@@ -77,7 +77,7 @@ const orderSchema = new mongoose.Schema(
 // Before saving the order, calculate the total price = Sum of (Price x Quantity) + Shipping Price
 orderSchema.pre("save", function (next) {
   if (!this.cartItems || this.cartItems.length === 0) {
-    return next(new Error("Order must have at least one cart item"));
+    return next(new apiError("Order must have at least one cart item", 400));
   }
   if (this.cartItems?.length) {
     const subtotal = this.cartItems.reduce(
@@ -87,7 +87,7 @@ orderSchema.pre("save", function (next) {
     this.totalOrderPrice = subtotal + this.shippingPrice;
   }
   if (this.totalOrderPrice <= 0) {
-    return next(new Error("Order total price must be greater than 0"));
+    return next(new apiError("Order total price must be greater than 0", 400));
   }
   next();
 });

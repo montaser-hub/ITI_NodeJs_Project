@@ -1,4 +1,5 @@
-const allowedFilterFields = ['age','name', 'email', 'isConfirmed', 'active','role']; // Add valid filter fields
+import apiError from "../Utils/apiError"
+const allowedFilterFields = [ 'age', 'name', 'email', 'isConfirmed', 'active', 'role' ]; // Add valid filter fields
 
 const allowedOperators = ["gte", "gt", "lte", "lt", "in", "ne"];
 
@@ -20,7 +21,7 @@ const filterQuery = (queryString) => {
 
     // Validate allowed filter fields
     if (!allowedFilterFields.includes(key) && !key.includes("__")) {
-      throw new Error(`Invalid filter field: ${key}`);
+      throw new apiError(`Invalid filter field: ${key}`);
     }
   });
 
@@ -28,7 +29,7 @@ const filterQuery = (queryString) => {
   let queryStr = JSON.stringify(queryObject);
   queryStr = queryStr.replace(/\b(gte|gt|lt|lte|in|ne)\b/g, (match) => {
     if (!allowedOperators.includes(match)) {
-      throw new Error(`Invalid filter operator: ${match}`);
+      throw new apiError(`Invalid filter operator: ${match}`);
     }
     return `$${match}`; // MongoDB operator syntax
   });

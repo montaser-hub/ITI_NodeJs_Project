@@ -2,7 +2,8 @@
 import { promisify } from "util"; //use Node.js built-in util module.
 import jwt from "jsonwebtoken";
 import User from "../Models/userModel.js";
-import catchAsync from "../Middelwares/catchAsync.js";
+import catchError from "../Middelwares/catchError.js";
+import apiError from "../Utils/apiError.js";
 import sendEmail from "../Utils/Email.js";
 import crypto from "crypto";
 
@@ -12,7 +13,7 @@ export const signToken = (id) => {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
-export const signup = catchAsync(async (req, res) => {
+export const signup = catchError(async (req, res) => {
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
@@ -25,7 +26,6 @@ export const signup = catchAsync(async (req, res) => {
   const verifyToken = signToken(newUser._id);
 
   const verifyURL = `${req.protocol}://${req.get(
-
     "host"
   )}/confirm/${verifyToken}`;
   console.log(verifyURL);
@@ -40,7 +40,7 @@ export const signup = catchAsync(async (req, res) => {
   });
 });
 
-export const verifyAccount = catchAsync(async (req, res, next) => {
+export const verifyAccount = catchError(async (req, res, next) => {
   // 1) Verify token (use promisify to await jwt.verify)
   const decoded = await promisify(jwt.verify)(
     req.params.token, // token passed in URL param
@@ -63,14 +63,14 @@ export const verifyAccount = catchAsync(async (req, res, next) => {
   });
 });
 
-export const login = catchAsync( async ( req, res, next ) => {
+export const login = catchError(async (req, res, next) => {
   const { email, password } = req.body;
   //1) Check if email and password exist
   if (!email || !password) {
-    return next(new Error("Please provide email and password!"));
+    return next(new apiError("Please provide email and password!"));
   }
   //2) Check if user exists && password is correct
-  const user = await User.findOne( { email } ).select("+password"); //to select the password field which has select: false in userModel
+  const user = await User.findOne({ email }).select("+password"); //to select the password field which has select: false in userModel
   //3) check if user is confirmed
   if (!user || !user?.isConfirmed) {
     return res.status(403).json({ message: "Please verify your account" });
@@ -83,7 +83,7 @@ export const login = catchAsync( async ( req, res, next ) => {
   }
   //5) check if password is correct by using instance method from userModel
   if (!user || !(await user.correctPassword(password, user.password))) {
-    return next(new Error("Incorrect email or password"));
+    return next(new apiError("Incorrect email or password"));
   }
 
   //6) If everything ok, send token to client
@@ -115,7 +115,7 @@ export const logout = (req, res) => {
   });
 };
 
-export const protect = catchAsync(async (req, res, next) => {
+export const protect = catchError(async (req, res, next) => {
   //1) Getting token and check if it's there
   let token;
   if (
@@ -126,7 +126,7 @@ export const protect = catchAsync(async (req, res, next) => {
   }
   if (!token) {
     return next(
-      new Error("You are not logged in! Please log in to get access.", 401)
+      new apiError("You are not logged in! Please log in to get access.", 401)
     );
   }
 
@@ -212,14 +212,17 @@ export const protect = catchAsync(async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
     return next(
-      new Error("The user belonging to this token does no longer exist.", 401)
+      new apiError(
+        "The user belonging to this token does no longer exist.",
+        401
+      )
     );
   }
 
   //4) Check if user changed password after the token was issued (replace with instance method in userModel)
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new Error("User recently changed password! Please log in again.", 401)
+      new apiError("User recently changed password! Please log in again.", 401)
     );
   }
 
@@ -234,22 +237,22 @@ export const restrictTo = (...roles) => {
     //roles is an array ['admin']. role='user'
     if (!roles.includes(req.user.role)) {
       return next(
-        new Error("You do not have permission to perform this action", 403)
+        new apiError("You do not have permission to perform this action", 403)
       );
     }
     next();
   };
 };
 
-export const forgetPassword = catchAsync(async (req, res, next) => {
+export const forgetPassword = catchError(async (req, res, next) => {
   //1) Get user based on Posted email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
-    return next(new Error("There is no user with email address.", 404));
+    return next(new apiError("There is no user with email address.", 404));
   }
   //2) Generate the random reset token
   const resetToken = await user.createPasswordResetToken(); //instance method from userModel
-  const us1er = await user.save( { validateBeforeSave: false } ); //save the user document with the new fields without running validators
+  const us1er = await user.save({ validateBeforeSave: false }); //save the user document with the new fields without running validators
   //3) Send it to user's email
   const resetURL = `${req.protocol}://${req.get(
     "host"
@@ -267,12 +270,15 @@ export const forgetPassword = catchAsync(async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     return next(
-      new Error("There was an error sending the email. Try again later!", 500)
+      new apiError(
+        "There was an error sending the email. Try again later!",
+        500
+      )
     );
   }
 });
 
-export const resetPassword = catchAsync(async (req, res, next) => {
+export const resetPassword = catchError(async (req, res, next) => {
   //1) Get user based on the token
   const hashedToken = crypto
     .createHash("sha256")
@@ -285,7 +291,7 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   });
   //2) If token has not expired, and there is user, set the new password
   if (!user) {
-    return next(new Error("Token is invalid or has expired", 400));
+    return next(new apiError("Token is invalid or has expired", 400));
   }
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -302,13 +308,12 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   });
 });
 
-
-export const updateMyPassword = catchAsync(async (req, res, next) => {
+export const updateMyPassword = catchError(async (req, res, next) => {
   //1) Get user from collection
   const user = await User.findById(req.user.id).select("+password"); //to select the password field which has select: false in userModel
   //2) Check if POSTed current password is correct
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
-    return next(new Error("Your current password is wrong.", 401));
+    return next(new apiError("Your current password is wrong.", 401));
   }
   //3) If so, update password
   user.password = req.body.password;

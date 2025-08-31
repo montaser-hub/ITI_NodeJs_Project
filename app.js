@@ -32,8 +32,8 @@ app.use( userRoutes);
 app.use( categoriesRouter);
 app.use( productRouter); 
 app.use(cartRouter);
-app.use("/api/orders", orderRoutes);
-app.use("/api/payments", paymentRoutes);
+app.use("/orders", orderRoutes);
+app.use("/payments", paymentRoutes);
 
 app.get("/cancel", (req, res) => {
   res.send("CANCELLED payment");

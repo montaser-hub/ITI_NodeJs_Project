@@ -1,11 +1,12 @@
 // TODO:Hager
-import catchError from "../Middelwares/catchAsync.js";
+import catchError from "../Middelwares/catchError.js";
 import ProductModel from "../Models/productModel.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
+import apiError from "../Utils/apiError.js";
 
 
 // Get products with pagination
-const getProducts = catchError(async (req, res) => {
+const getProducts = catchError(async (req, res,next) => {
     // pagination params
     const query = req.query;
     const filter = filterQuery(query);
@@ -24,8 +25,8 @@ const getProducts = catchError(async (req, res) => {
 
     res.json({
       message: "success",
-      page,
-      limit,
+      page: query.page,
+      limit: query.limit,
       totalProducts,
       data: products,
     });
@@ -33,17 +34,17 @@ const getProducts = catchError(async (req, res) => {
 });
 
 // Get product by ID
-const getProductById = catchError(async (req, res) => {
+const getProductById = catchError(async (req, res,next) => {
     const product = await ProductModel.findById(req.params.id)
       .populate("category", "name")
       .populate("user", "name email");
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return next(new apiError("Product not found", 404));
     res.json({ message: "success", data: product });
  
 });
 
 // Create product
-const createProduct = catchError(async (req, res) => {
+const createProduct = catchError(async (req, res, next) => {
     const { name, description, price, quantity, category, images } = req.body;
 
     const newProduct = new ProductModel({
@@ -62,7 +63,7 @@ const createProduct = catchError(async (req, res) => {
 });
 
 // Update product
-const updateProduct = catchError(async (req, res) => {
+const updateProduct = catchError(async (req, res, next) => {
  
     const updatedProduct = await ProductModel.findByIdAndUpdate(
       req.params.id,
@@ -70,18 +71,16 @@ const updateProduct = catchError(async (req, res) => {
       { new: true }
     );
 
-    if (!updatedProduct)
-      return res.status(404).json({ message: "Product not found" });
+    if (!updatedProduct) return next(new apiError("Product not found", 404));
 
     res.json({ message: "Product updated", data: updatedProduct });
   
 });
 
 // Delete product
-const deleteProduct = catchError(async (req, res) => {
+const deleteProduct = catchError(async (req, res, next) => {
     const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
-    if (!deletedProduct)
-      return res.status(404).json({ message: "Product not found" });
+    if (!deletedProduct) return next(new apiError("Product not found", 404));
     res.json({ message: "Product deleted" });
 });
 
