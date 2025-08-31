@@ -1,4 +1,4 @@
-import appError from "../Utils/appError";
+import appError from "../Utils/appError.js";
 const allowedFilterFields = [
   "age",
   "name",

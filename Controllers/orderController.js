@@ -27,7 +27,6 @@ const placeOrder = catchError(async (req, res, next) => {
 // @desc    View order history for the user
 // @route   GET /orders/myorders
 // @access  Private (User)
-late("cartItems.product", "name price");
 
 const getMyOrders = catchError(async (req, res) => {
   const query = req.query;

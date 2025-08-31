@@ -73,7 +73,7 @@ export const deleteUser = catchError(async (req, res, next) => {
   res.status(204).json({ message: "User deactivated" });
 });
 
-async function findeUserById(id, next, next) {
+async function findeUserById(id, next) {
   const user = await User.findById(id); //.lean();
   if (!user) {
     return next(new appError("User not found", 404));

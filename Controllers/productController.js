@@ -71,20 +71,21 @@ const updateProduct = catchError(async (req, res) => {
 });
 
 // Delete product
-const deleteProduct = catchError(async (req, res, next) => {
-    const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
-    if (!deletedProduct) return next(new appError("Product not found", 404));
-    res.json({ message: "Product deleted" });
-const deleteProduct = catchError(async (req, res) => {
-  const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
-  if (!deletedProduct) return next(new appError("Product not found", 404));
-  res.json({ message: "Product deleted" });
-});
-
+const deleteProduct = catchError( async ( req, res, next ) => {
+  const deletedProduct = await ProductModel.findByIdAndDelete( req.params.id );
+  if ( !deletedProduct ) return next( new appError( "Product not found", 404 ) );
+  res.json( { message: "Product deleted" } );
+  const deleteProduct = catchError( async ( req, res ) => {
+    const deletedProduct = await ProductModel.findByIdAndDelete( req.params.id );
+    if ( !deletedProduct ) return next( new appError( "Product not found", 404 ) );
+    res.json( { message: "Product deleted" } );
+  } );
+})
+  
 export {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
-};
+}
