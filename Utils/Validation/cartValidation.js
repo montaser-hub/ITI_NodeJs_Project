@@ -12,8 +12,8 @@ const itemSchema = Joi.object({
     "any.required": "Quantity is required",
   }),
     "any.required": "Quantity is required",
-  }),
-});
+  })
+
 
 export const cartValidationSchema = Joi.object({
   titleCart: Joi.string().min(5).max(50).required().messages({

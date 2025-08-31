@@ -1,7 +1,7 @@
 import cartModel from "../Models/cartModel.js";
 import ProductModel from "../Models/productModel.js";
-import catchError from "../Middelwares/catchAsync.js";
-import AppError from "../Utils/apiError.js";
+import catchError from "../Middelwares/catchError.js";
+import AppError from "../Utils/appError.js";
 
 // Add or update cart
 export const createCart = catchError(async (req, res, next) => {
@@ -87,7 +87,6 @@ export const getCart = catchError(async (req, res) => {
       .json({ message: "Not authorized to view this cart" });
   }
 
-  const cart = await findCartById(req.params.cartId);
   res.status(200).json({ message: "Cart retrieved successfully", data: cart });
 });
 
@@ -100,7 +99,6 @@ export const getCarts = catchError(async (req, res) => {
   res
     .status(200)
     .json({ message: "Carts retrieved successfully", data: carts });
-
 });
 
 // Update cart
@@ -142,4 +140,3 @@ export const deleteCarts = catchError(async (req, res) => {
     message: "All Carts Of The User Deleted Successfully",
   });
 });
-

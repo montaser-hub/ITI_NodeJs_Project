@@ -2,9 +2,8 @@ import catchError from "../Middelwares/catchError.js";
 import { Order } from "../Models/orderModel.js";
 import { Payment } from "../Models/paymentsModel.js";
 import Cart from "../Models/cartModel.js";
-import AppError from "../Utils/appError.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
-import AppError from "../Utils/apiError.js";
+import AppError from "../Utils/appError.js";
 
 // @desc    Place an order from the user's cart
 // @route   POST /orders

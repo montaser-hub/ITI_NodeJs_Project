@@ -1,7 +1,7 @@
 import { Payment } from "../Models/paymentsModel.js";
 import { Order } from "../Models/orderModel.js";
 import fetch from "node-fetch";
-import catchError from "../Middelwares/catchAsync.js";
+import catchError from "../Middelwares/catchError.js";
 import AppError from "../Utils/appError.js";
 
 // Validate environment variables
@@ -337,7 +337,6 @@ export const capturePayPalPayment = catchError(async (req, res, next) => {
   order.paidAt = Date.now();
   order.status = "paid";
   await order.save();
-
 
   res.redirect("/success");
 });
