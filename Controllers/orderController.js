@@ -1,34 +1,65 @@
 import catchError from "../Middelwares/catchError.js";
 import { Order } from "../Models/orderModel.js";
 import { Payment } from "../Models/paymentsModel.js";
+import Cart from "../Models/cartModel.js";
 import AppError from "../Utils/appError.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
+import AppError from "../Utils/apiError.js";
 
-// @desc    Place an order from the cart
+// @desc    Place an order from the user's cart
 // @route   POST /orders
 // @access  Private (User)
 const placeOrder = catchError(async (req, res, next) => {
-  const { cartItems, shippingAddress, shippingPrice, paymentMethodType } =
-    req.body;
+  // 1. Get user's cart
+  const cart = await Cart.findOne({ userId: req.user._id }).populate(
+    "items.productId",
+    "price name"
+  );
 
+  if (!cart || cart.items.length === 0) {
+    return next(new AppError("Your cart is empty", 400));
+  }
+
+  // 2. Snapshot cart items (include price at the moment)
+  const snapshotCartItems = cart.items.map((item) => ({
+    product: item.productId._id,
+    quantity: item.quantity,
+    price: item.productId.price,
+  }));
+
+  // 3. Calculate total
+  const subtotal = snapshotCartItems.reduce(
+    (sum, i) => sum + i.price * i.quantity,
+    0
+  );
+
+  const shippingPrice = req.body.shippingPrice || 0;
+  const totalOrderPrice = subtotal + shippingPrice;
+
+  // 4. Create order
   const order = new Order({
     user: req.user._id,
-    cartItems,
-    shippingAddress,
+    cartItems: snapshotCartItems,
+    shippingAddress: req.body.shippingAddress,
     shippingPrice,
-    paymentMethodType,
-    totalOrderPrice: 1,
+    paymentMethodType: req.body.paymentMethodType || "cash",
+    totalOrderPrice,
   });
 
   const createdOrder = await order.save();
+
+  // 5. Clear cart after placing order
+  cart.items = [];
+  cart.totalPrice = 0;
+  await cart.save();
+
   res.status(201).json(createdOrder);
 });
 
 // @desc    View order history for the user
 // @route   GET /orders/myorders
 // @access  Private (User)
-
-const getMyOrders = catchError(async (req, res) => {
+const getMyOrders = catchError(async (req, res, next) => {
   const query = req.query;
   const { skip, limit } = paginateQuery(query);
   const sort = sortQuery(query);
@@ -47,10 +78,10 @@ const getMyOrders = catchError(async (req, res) => {
     .json({ total, page: query.page, limit: query.limit, data: orders });
 });
 
-// @desc    View order history for the admin
-// @route   GET /orders/myorders
+// @desc    View all orders (Admin)
+// @route   GET /orders
 // @access  Private (Admin)
-const getOrders = catchError(async (req, res) => {
+const getOrders = catchError(async (req, res, next) => {
   const query = req.query;
   const filter = filterQuery(query);
   const { skip, limit } = paginateQuery(query);
@@ -66,13 +97,13 @@ const getOrders = catchError(async (req, res) => {
 
   res.status(200).json({
     total,
-    page: query.page || 1,
-    limit: query.limit || 100,
+    page: query.page,
+    limit: query.limit,
     data: orders,
   });
 });
 
-// @desc    Get order by ID and track status
+// @desc    Get order by ID
 // @route   GET /orders/:id
 // @access  Private (User/Admin)
 const getOrderById = catchError(async (req, res, next) => {
@@ -99,7 +130,10 @@ const updateOrderToDelivered = catchError(async (req, res, next) => {
     order.deliveredAt = Date.now();
     order.status = "shipped";
     const updatedOrder = await order.save();
-    res.json(updatedOrder);
+    res.status(200).json({
+      message: "Order marked as delivered successfully",
+      data: updatedOrder,
+    });
   } else {
     return next(new AppError("Order not found", 404));
   }
@@ -129,9 +163,14 @@ const cancelOrder = catchError(async (req, res, next) => {
     order.cancelledAt = Date.now();
     order.status = "cancelled";
     const updatedOrder = await order.save();
-    res.json(updatedOrder);
+    res.status(200).json({
+      message: "Order cancelled successfully",
+      data: updatedOrder,
+    });
   } else {
-    return next(new AppError("Cannot cancel this order", 400));
+    if (!order) {
+      return next(new AppError("Cannot cancel this order", 404));
+    }
   }
 });
 

@@ -41,8 +41,7 @@ const getProductById = catchError(async (req, res, next) => {
 
 // Create product
 const createProduct = catchError(async (req, res) => {
-  const { name, description, price, quantity, categoryId, images } = req.body;
-
+  const { name, description, price, quantity,  categoryId, images } = req.body;
   const newProduct = new ProductModel({
     name,
     description,

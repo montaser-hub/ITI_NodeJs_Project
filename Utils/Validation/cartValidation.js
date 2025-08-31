@@ -5,8 +5,12 @@ const itemSchema = Joi.object({
     "any.required": "Product ID is required",
   }),
   quantity: Joi.number().integer().min(1).max(100).required().messages({
+  }),
+  quantity: Joi.number().integer().min(1).max(100).required().messages({
     "number.min": "Quantity must be Positive Number Greater Than 0",
     "number.max": "Quantity cannot exceed 100",
+    "any.required": "Quantity is required",
+  }),
     "any.required": "Quantity is required",
   }),
 });
