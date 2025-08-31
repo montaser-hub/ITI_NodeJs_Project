@@ -64,13 +64,13 @@ const sortQuery = (queryString) => {
 // Function for pagination
 const paginateQuery = (queryString) => {
   if (!queryString || queryString.all) {
-    return { skip: 0, limit: 0 }; // This tells the DB: no pagination
+    return {page: 1, skip: 0, limit: 0 }; // This tells the DB: no pagination
   }
-  const page = queryString.page * 1 || 1; // Default to page 1
-  const limit = queryString.limit * 1 || 100; // Default to 100 items per page
+  const page =parseInt(queryString.page) || 1; // Default to page 1
+  const limit = parseInt(queryString.limit) || 100; // Default to 100 items per page
   const skip = (page - 1) * limit;
 
-  return { skip, limit };
+  return { page, skip, limit };
 };
 
 export { filterQuery, sortQuery, paginateQuery };

@@ -1,11 +1,11 @@
 import catchError from "../Middelwares/catchError.js";
 import { Order } from "../Models/orderModel.js";
 import { Payment } from "../Models/paymentsModel.js";
-import apiError from "../Utils/apiError.js";
-
+import appError from "../Utils/apiError.js";
+import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
 // @desc    Place an order from the cart
-// @route   POST /api/orders
+// @route   POST /orders
 // @access  Private (User)
 const placeOrder = catchError(async (req, res, next) => {
   const { cartItems, shippingAddress, shippingPrice, paymentMethodType } =
@@ -25,18 +25,56 @@ const placeOrder = catchError(async (req, res, next) => {
 });
 
 // @desc    View order history for the user
-// @route   GET /api/orders/myorders
+// @route   GET /orders/myorders
 // @access  Private (User)
-const getMyOrders = catchError(async (req, res, next) => {
-  const orders = await Order.find({ user: req.user._id })
-    .sort({ createdAt: -1 })
-    .populate("cartItems.product", "name price")
+late("cartItems.product", "name price")
+
+const getMyOrders = catchError(async (req, res) => {
+  const query = req.query;
+  const { skip, limit } = paginateQuery(query);
+  const sort = sortQuery(query);
+  const filter = { ...filterQuery(query), user: req.user._id };
+
+  const orders = await Order.find(filter)
+    .skip(skip)
+    .limit(limit)
+    .sort(sort)
     .populate("cartItems.product", "name price");
-  res.json(orders);
+
+  const total = await Order.countDocuments(filter);
+
+  res
+    .status(200)
+    .json({ total, page: query.page, limit: query.limit, data: orders });
+});
+
+// @desc    View order history for the admin
+// @route   GET /orders/myorders
+// @access  Private (Admin)
+const getOrders = catchError(async (req, res) => {
+  const query = req.query;
+  const filter = filterQuery(query);
+  const { skip, limit } = paginateQuery(query);
+  const sort = sortQuery(query);
+
+  const orders = await Order.find(filter)
+    .skip(skip)
+    .limit(limit)
+    .sort(sort)
+    .populate("cartItems.product", "name price");
+
+  const total = await Order.countDocuments(filter);
+
+  res.status(200).json({
+    total,
+    page: query.page || 1,
+    limit: query.limit || 100,
+    data: orders,
+  });
 });
 
 // @desc    Get order by ID and track status
-// @route   GET /api/orders/:id
+// @route   GET /orders/:id
 // @access  Private (User/Admin)
 const getOrderById = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id)
@@ -52,7 +90,7 @@ const getOrderById = catchError(async (req, res, next) => {
 });
 
 // @desc    Update order to delivered
-// @route   PUT /api/orders/:id/deliver
+// @route   PUT /orders/:id/deliver
 // @access  Private (Admin)
 const updateOrderToDelivered = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
@@ -69,14 +107,13 @@ const updateOrderToDelivered = catchError(async (req, res, next) => {
 });
 
 // @desc    Cancel an order
-// @route   PUT /api/orders/:id/cancel
+// @route   PUT /orders/:id/cancel
 // @access  Private (User)
 const cancelOrder = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
 
   if (
     order &&
-    order.user.toString() === req.user._id.toString() &&
     order.user.toString() === req.user._id.toString() &&
     !order.isPaid &&
     !order.isDelivered &&
@@ -102,6 +139,7 @@ const cancelOrder = catchError(async (req, res, next) => {
 export {
   placeOrder,
   getMyOrders,
+  getOrders,
   getOrderById,
   updateOrderToDelivered,
   cancelOrder,

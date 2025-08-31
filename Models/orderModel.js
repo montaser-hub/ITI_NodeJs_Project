@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import apiError from "../Utils/apiError"
+import ProductModel from "./productModel.js";
 
 const orderSchema = new mongoose.Schema(
   {
@@ -23,7 +23,6 @@ const orderSchema = new mongoose.Schema(
         },
         price: {
           type: Number,
-          required: true,
         },
         color: String,
       },
@@ -67,12 +66,51 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "paid", "shipped", "completed", "cancelled"],
+      enum: [
+        "pending",
+        "paid",
+        "payment_failed",
+        "shipped",
+        "completed",
+        "cancelled",
+      ],
       default: "pending",
     },
   },
   { timestamps: true, versionKey: false }
 );
+
+orderSchema.pre("validate", async function (next) {
+  try {
+    if (!this.cartItems || this.cartItems.length === 0) {
+      return next(new Error("Order must have at least one cart item"));
+    }
+
+    for (const item of this.cartItems) {
+      if (!item.price) {
+        const product = await ProductModel.findById(item.product);
+        if (!product) {
+          return next(new Error(`Product not found for ID: ${item.product}`));
+        }
+        item.price = product.price;
+      }
+    }
+
+    const subtotal = this.cartItems.reduce(
+      (sum, i) => sum + i.price * i.quantity,
+      0
+    );
+    this.totalOrderPrice = subtotal + this.shippingPrice;
+
+    if (this.totalOrderPrice <= 0) {
+      return next(new Error("Order total price must be greater than 0"));
+    }
+
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Before saving the order, calculate the total price = Sum of (Price x Quantity) + Shipping Price
 orderSchema.pre("save", function (next) {
