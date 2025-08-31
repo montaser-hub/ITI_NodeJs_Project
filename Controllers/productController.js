@@ -3,35 +3,30 @@ import catchError from "../Middelwares/catchAsync.js";
 import ProductModel from "../Models/productModel.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 
-
 // Get products with pagination
 const getProducts = catchError(async (req, res) => {
+  // pagination params
+  const query = req.query;
+  const filter = filterQuery(query);
+  const { skip, limit } = paginateQuery(query);
+  const sort = sortQuery(query);
+  
+  const products = await ProductModel.find(filter)
+    .populate("categoryId", "name")
+    .populate("addedBy", "name email role")
+    .skip(skip)
+    .limit(limit)
+    .sort(sort);
 
+  const totalProducts = await ProductModel.countDocuments(filter);
 
-    // pagination params
-    const query = req.query;
-    const filter = filterQuery(query);
-    const { page ,skip, limit } = paginateQuery(query);
-    const sort = sortQuery(query);
-
-    const products = await ProductModel.find(filter)
-      .populate("categoryId", "name")
-      .populate("addedBy", "name email role")
-      .skip(skip)
-      .limit(limit)
-      .sort(sort);
-
-    const totalProducts = await ProductModel.countDocuments(filter);
-   
-
-    res.json({
-      message: "success",
-        page,
-        limit,
-        totalProducts,
-        data: products,
-    });
- 
+  res.json({
+    message: "success",
+    page: query.page,
+    limit: query.limit,
+    totalProducts,
+    data: products,
+  });
 });
 
 // Get product by ID
@@ -40,8 +35,7 @@ const getProductById = catchError(async (req, res) => {
       .populate("categoryId", "name")
       .populate("addedBy", "name email");
     if (!product) return res.status(404).json({ message: "Product not found" });
-    res.json({ message: "success", data: product });
- 
+    res.json({ message: "success", data: product }); 
 });
 
 // Create product
@@ -58,36 +52,33 @@ const createProduct = catchError(async (req, res) => {
       addedBy: req.user?._id,
     });
 
-    await newProduct.save();
-    res.status(201).json({ message: "Product created", data: newProduct });
-  
+  await newProduct.save();
+  res.status(201).json({ message: "Product created", data: newProduct });
 });
 
 // Update product
 const updateProduct = catchError(async (req, res) => {
- 
-    const updatedProduct = await ProductModel.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+  const updatedProduct = await ProductModel.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true }
+  );
 
-    if (!updatedProduct)
-      return res.status(404).json({ message: "Product not found" });
+  if (!updatedProduct)
+    return res.status(404).json({ message: "Product not found" });
 
-    res.json({ message: "Product updated", data: updatedProduct });
-  
+  res.json({ message: "Product updated", data: updatedProduct });
 });
 
 // Delete product
 const deleteProduct = catchError(async (req, res) => {
-    const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
-    if (!deletedProduct)
-      return res.status(404).json({ message: "Product not found" });
-    res.json({ message: "Product deleted" });
+  const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
+  if (!deletedProduct)
+    return res.status(404).json({ message: "Product not found" });
+  res.json({ message: "Product deleted" });
 });
 
-export  {
+export {
   getProducts,
   getProductById,
   createProduct,

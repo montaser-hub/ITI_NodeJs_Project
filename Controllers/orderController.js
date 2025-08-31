@@ -114,7 +114,6 @@ const cancelOrder = catchError(async (req, res) => {
   if (
     order &&
     order.user.toString() === req.user._id.toString() &&
-    order.user.toString() === req.user._id.toString() &&
     !order.isPaid &&
     !order.isDelivered &&
     !order.isCancelled
