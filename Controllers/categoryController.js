@@ -27,7 +27,7 @@ export const getCategories = catchError(async (req, res, next) => {
   const total = await categoryModel.countDocuments(filter);
 
   if (!categories || categories.length === 0) {
-    return res.status(404).json({ message: "No categories found" });
+    return next (new AppError("No categories found",404 ));
   }
 
   res.status(200).json({
