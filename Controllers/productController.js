@@ -11,7 +11,6 @@ const getProducts = catchError(async (req, res) => {
   const { skip, limit } = paginateQuery(query);
   const sort = sortQuery(query);
 
-
   const products = await ProductModel.find(filter)
     .populate("categoryId", "name")
     .populate("addedBy", "name email role")
@@ -23,8 +22,8 @@ const getProducts = catchError(async (req, res) => {
 
   res.json({
     message: "success",
-    page: query.page || 1,
-    limit,
+    page: query.page,
+    limit: query.limit,
     totalProducts,
     data: products,
   });
@@ -36,8 +35,8 @@ const getProductById = catchError(async (req, res) => {
       .populate("categoryId", "name")
       .populate("addedBy", "name email");
     if (!product) return res.status(404).json({ message: "Product not found" });
-    res.json({ message: "success", data: product });
- });
+    res.json({ message: "success", data: product }); 
+});
 
 // Create product
 const createProduct = catchError(async (req, res) => {

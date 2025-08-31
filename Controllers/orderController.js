@@ -96,8 +96,8 @@ const getOrders = catchError(async (req, res, next) => {
 
   res.status(200).json({
     total,
-    page: query.page || 1,
-    limit: query.limit || 100,
+    page: query.page,
+    limit: query.limit,
     data: orders,
   });
 });

@@ -41,6 +41,7 @@ app.use("/payments", paymentRoutes);
 
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
+
 app.get("/cancel", (req, res) => {
   res.send("CANCELLED payment");
 });

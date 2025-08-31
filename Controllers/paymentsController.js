@@ -260,7 +260,6 @@ export const paypalWebhook = catchError(async (req, res, next) => {
 
       break;
     }
-
     default:
       break;
   }

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import ProductModel from "./productModel.js";
 
 const orderSchema = new mongoose.Schema(
   {
@@ -22,7 +23,6 @@ const orderSchema = new mongoose.Schema(
         },
         price: {
           type: Number,
-          required: true,
         },
         color: String,
       },
@@ -79,7 +79,6 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true, versionKey: false }
 );
-
 // Index to speed up fetching all requests for a specific user
 orderSchema.index({ user: 1, createdAt: -1 });
 
