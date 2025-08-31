@@ -28,12 +28,18 @@ if (process.env.NODE_ENV === "development") {
 
 app.use(express.json());
 
-app.use( userRoutes);
-app.use( categoriesRouter);
-app.use( productRouter); 
+app.get("/", (req, res) => {
+  res.send("Welcome to my API");
+});
+
+app.use(userRoutes);
+app.use(categoriesRouter);
+app.use(productRouter);
 app.use(cartRouter);
 app.use("/orders", orderRoutes);
 app.use("/payments", paymentRoutes);
+
+app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 app.get("/cancel", (req, res) => {
   res.send("CANCELLED payment");
@@ -50,10 +56,6 @@ app.get("/api-docs-json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);
 });
-
-
-
-
 
 app.all("/{*any}", (req, res, next) => {
   next(new AppError(`Can not find ${req.originalUrl} on this server`, 404));

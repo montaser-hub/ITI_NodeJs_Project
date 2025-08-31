@@ -1,29 +1,7 @@
 import Joi from "joi";
-import objectIdSchema from "../../schema.js";
 
-// Validation schema for placing an order
+// Validation schema for placing an order (Approach 2)
 const placeOrderSchema = Joi.object({
-  cartItems: Joi.array()
-    .items(
-      Joi.object({
-        product: objectIdSchema.required().messages({
-          "any.required": "Product ID is required",
-        }),
-        quantity: Joi.number().integer().min(1).required().messages({
-          "number.min": "Quantity cannot be less than 1",
-          "any.required": "Quantity is required",
-        }),
-        color: Joi.string().trim().optional().allow("").messages({
-          "string.base": "Color must be a string",
-        }),
-      })
-    )
-    .min(1)
-    .required()
-    .messages({
-      "array.min": "At least one cart item is required",
-      "any.required": "Cart items are required",
-    }),
   shippingAddress: Joi.object({
     details: Joi.string().trim().required().messages({
       "any.required": "Shipping address details are required",
@@ -42,9 +20,11 @@ const placeOrderSchema = Joi.object({
     .messages({
       "any.required": "Shipping address is required",
     }),
+
   shippingPrice: Joi.number().min(0).default(0).messages({
     "number.min": "Shipping price cannot be negative",
   }),
+
   paymentMethodType: Joi.string()
     .valid("card", "cash")
     .default("cash")
@@ -53,5 +33,5 @@ const placeOrderSchema = Joi.object({
     }),
 });
 
-// Export validation middlewares
+// Export validation middleware
 export const validateOrderSchema = placeOrderSchema;
