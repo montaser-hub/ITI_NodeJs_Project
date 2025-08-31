@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import ProductModel from "./productModel.js";
 import AppError from "../Utils/apiError.js";
+import catchError from "../Middelwares/catchAsync.js";
 const cartSchema = new mongoose.Schema(
     {
     titleCart: {
@@ -52,19 +53,30 @@ const cartSchema = new mongoose.Schema(
     versionKey: false,
     }
 );
-cartSchema.pre("save", async function (next) {
+
+cartSchema.pre("save", catchError(async function (next) {
+    let mergedItems = [];
+    for (const item of this.items) {
+        const existing = mergedItems.find((i) => i.productId.toString() === item.productId.toString());
+        if (existing) {existing.quantity += item.quantity;} 
+        else {mergedItems.push(item.toObject());}
+    }
+    this.items = mergedItems;
     let total = 0;
     for (const item of this.items) {
         const product = await ProductModel.findById(item.productId);
-        if (!product) {
-            return next(new AppError(`The Product Is Not Available Now`, 404));
-        }
+        if (!product) return next(new AppError(`Product not found`, 404));
+        if (item.quantity > product.quantity) return next(new AppError(`Not enough stock for ${product.name}`,400));
         item.priceAtTime = product.price;
         item.subTotal = product.price * item.quantity;
         total += item.subTotal;
     }
     this.totalPrice = total;
     next();
-});
+} ));
+
+
+
+
 const cartModel = mongoose.model("Cart", cartSchema);
 export default cartModel;

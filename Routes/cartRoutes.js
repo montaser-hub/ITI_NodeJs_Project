@@ -4,9 +4,8 @@ import { createCart,getCart,getCarts,updateCart,deleteCart,deleteCarts} from "..
 import validationMiddleware from "../Middelwares/validation.js";
 import {cartValidationSchema} from "../Utils/Validation/cartValidation.js"
 const cartRouter = express.Router();
-
 cartRouter.post("/carts",protect, validationMiddleware(cartValidationSchema) , createCart);
-cartRouter.route("/carts/:cartId")
+cartRouter.route("/carts/:userId")
                 .get(protect,getCart)
                 .put(protect,validationMiddleware(cartValidationSchema), updateCart)
                 .delete(protect,deleteCart)
