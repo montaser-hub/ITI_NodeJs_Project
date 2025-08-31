@@ -4,15 +4,13 @@ const itemSchema = Joi.object({
   productId: objectIdSchema.required().messages({
     "any.required": "Product ID is required",
   }),
-  quantity: Joi.number().integer().min(1).max(100).required().messages({
-  }),
+
   quantity: Joi.number().integer().min(1).max(100).required().messages({
     "number.min": "Quantity must be Positive Number Greater Than 0",
     "number.max": "Quantity cannot exceed 100",
     "any.required": "Quantity is required",
   }),
-    "any.required": "Quantity is required",
-  })
+})
 
 
 export const cartValidationSchema = Joi.object({
@@ -27,5 +25,14 @@ export const cartValidationSchema = Joi.object({
   }),
   items: Joi.array().items(itemSchema).min(1).messages({
     "array.min": "Cart must have at least one item",
+  }),
+});
+
+export const QuantityValidationSchema = Joi.object({
+  quantity: Joi.number().integer().min(1).max(100).required().messages({
+    "number.base": "Quantity must be a number",
+    "number.min": "Quantity must be Positive Number Greater Than 0",
+    "number.max": "Quantity cannot exceed 100",
+    "any.required": "Quantity is required",
   }),
 });
