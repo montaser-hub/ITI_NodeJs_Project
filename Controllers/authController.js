@@ -2,7 +2,7 @@
 import { promisify } from "util"; //use Node.js built-in util module.
 import jwt from "jsonwebtoken";
 import User from "../Models/userModel.js";
-import catchAsync from "../Middelwares/catchAsync.js";
+import catchError from "../Middelwares/catchError.js";
 import sendEmail from "../Utils/Email.js";
 import crypto from "crypto";
 import AppError from "../Utils/apiError.js";
@@ -14,7 +14,7 @@ export const signToken = (id) => {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
-export const signup = catchAsync(async (req, res) => {
+export const signup = catchError(async (req, res) => {
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
@@ -27,7 +27,6 @@ export const signup = catchAsync(async (req, res) => {
   const verifyToken = signToken(newUser._id);
 
   const verifyURL = `${req.protocol}://${req.get(
-
     "host"
   )}/confirm/${verifyToken}`;
   console.log(verifyURL);
@@ -42,7 +41,7 @@ export const signup = catchAsync(async (req, res) => {
   });
 });
 
-export const verifyAccount = catchAsync(async (req, res, next) => {
+export const verifyAccount = catchError(async (req, res, next) => {
   // 1) Verify token (use promisify to await jwt.verify)
   const decoded = await promisify(jwt.verify)(
     req.params.token, // token passed in URL param
@@ -65,14 +64,14 @@ export const verifyAccount = catchAsync(async (req, res, next) => {
   });
 });
 
-export const login = catchAsync( async ( req, res, next ) => {
+export const login = catchError(async (req, res, next) => {
   const { email, password } = req.body;
   //1) Check if email and password exist
   if (!email || !password) {
     return next(new AppError("Please provide email and password!",400));
   }
   //2) Check if user exists && password is correct
-  const user = await User.findOne( { email } ).select("+password"); //to select the password field which has select: false in userModel
+  const user = await User.findOne({ email }).select("+password"); //to select the password field which has select: false in userModel
   //3) check if user is confirmed
   if (!user || !user?.isConfirmed) {
     return res.status(403).json({ message: "Please verify your account" });
@@ -117,7 +116,7 @@ export const logout = (req, res) => {
   });
 };
 
-export const protect = catchAsync(async (req, res, next) => {
+export const protect = catchError(async (req, res, next) => {
   //1) Getting token and check if it's there
   let token;
   if (
@@ -243,7 +242,7 @@ export const restrictTo = (...roles) => {
   };
 };
 
-export const forgetPassword = catchAsync(async (req, res, next) => {
+export const forgetPassword = catchError(async (req, res, next) => {
   //1) Get user based on Posted email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
@@ -251,7 +250,7 @@ export const forgetPassword = catchAsync(async (req, res, next) => {
   }
   //2) Generate the random reset token
   const resetToken = await user.createPasswordResetToken(); //instance method from userModel
-  const us1er = await user.save( { validateBeforeSave: false } ); //save the user document with the new fields without running validators
+  const us1er = await user.save({ validateBeforeSave: false }); //save the user document with the new fields without running validators
   //3) Send it to user's email
   const resetURL = `${req.protocol}://${req.get(
     "host"
@@ -274,7 +273,7 @@ export const forgetPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-export const resetPassword = catchAsync(async (req, res, next) => {
+export const resetPassword = catchError(async (req, res, next) => {
   //1) Get user based on the token
   const hashedToken = crypto
     .createHash("sha256")
@@ -304,8 +303,7 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   });
 });
 
-
-export const updateMyPassword = catchAsync(async (req, res, next) => {
+export const updateMyPassword = catchError(async (req, res, next) => {
   //1) Get user from collection
   const user = await User.findById(req.user.id).select("+password"); //to select the password field which has select: false in userModel
   //2) Check if POSTed current password is correct

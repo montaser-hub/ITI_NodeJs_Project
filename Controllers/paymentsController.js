@@ -1,6 +1,8 @@
 import { Payment } from "../Models/paymentsModel.js";
 import { Order } from "../Models/orderModel.js";
 import fetch from "node-fetch";
+import appError from "../Utils/apiError.js";
+
 
 async function getPayPalAccessToken() {
   const auth = Buffer.from(
@@ -21,7 +23,7 @@ async function getPayPalAccessToken() {
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to get PayPal access token");
+    throw new apiError("Failed to get PayPal access token", 401);
   }
   return data.access_token;
 }
@@ -31,12 +33,10 @@ async function getPayPalAccessToken() {
  * @route POST /api/payments/paypal/:orderId
  * @access Private
  */
-const createPayPalPayment = async (req, res) => {
+const createPayPalPayment = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.orderId);
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
-    }
+    if (!order) return next(new apiError("Order not found", 404));
 
     const accessToken = await getPayPalAccessToken();
     const response = await fetch(
@@ -77,9 +77,7 @@ const createPayPalPayment = async (req, res) => {
     await order.save();
 
     const approveLink = data.links.find((l) => l.rel === "approve")?.href;
-    if (!approveLink) {
-      return res.status(500).json({ error: "No approve link found" });
-    }
+    if (!approveLink) return next(new apiError("No approve link found", 404));
 
     res.json({ url: approveLink });
   } catch (err) {
@@ -92,7 +90,7 @@ const createPayPalPayment = async (req, res) => {
  * @route POST /api/payments/paypal/webhook
  * @access Public
  */
-const paypalWebhook = async (req, res) => {
+const paypalWebhook = async (req, res, next) => {
   try {
     const event = req.body;
     const requiredHeaders = [
@@ -104,9 +102,7 @@ const paypalWebhook = async (req, res) => {
     ];
 
     for (const header of requiredHeaders) {
-      if (!req.headers[header]) {
-        return res.status(400).send(`Missing required header: ${header}`);
-      }
+      if (!req.headers[header]) return next(new apiError(`Missing required header: ${header}`, 400));
     }
 
     const verifyPayload = {
@@ -133,10 +129,10 @@ const paypalWebhook = async (req, res) => {
     );
 
     const verifyResponse = await response.json();
-    if (!response.ok || verifyResponse.verification_status !== "SUCCESS") {
-      return res.status(400).send("Webhook verification failed");
-    }
 
+    if (!response.ok || verifyResponse.verification_status !== "SUCCESS") return next(new appError("Webhook verification faild", 400));
+    let orderObjectId;
+    
     switch (event.event_type) {
       case "PAYMENT.CAPTURE.COMPLETED":
       case "CHECKOUT.ORDER.APPROVED": {
@@ -213,8 +209,7 @@ const paypalWebhook = async (req, res) => {
 
     res.sendStatus(200);
   } catch (err) {
-    console.error("Webhook error:", err);
-    res.status(500).send("Server Error");
+    return next(new appError(`server Error ${err.mesage}`, 500));
   }
 };
 
@@ -223,26 +218,20 @@ const paypalWebhook = async (req, res) => {
  * @route GET /api/payments/paypal/capture/:orderId
  * @access Public
  */
-const capturePayPalPayment = async (req, res) => {
+const capturePayPalPayment = async (req, res, next) => {
   try {
     const { orderId } = req.params;
     const { token } = req.query;
 
-    if (!token) {
-      return res.status(400).json({ error: "No token provided" });
-    }
+    if (!token) return next(new apiError("No token provided", 400));
 
     const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
-    }
+    if (!order) return next(new apiError("Order not found", 404));
 
     const payment = await Payment.findOne({
       orderId: new mongoose.Types.ObjectId(orderId),
     });
-    if (!payment) {
-      return res.status(404).json({ error: "Payment not found" });
-    }
+    if (!payment) return next(new apiError("Payment not found", 404));
 
     const accessToken = await getPayPalAccessToken();
     const response = await fetch(
@@ -257,11 +246,7 @@ const capturePayPalPayment = async (req, res) => {
     );
 
     const data = await response.json();
-    if (!response.ok) {
-      return res
-        .status(500)
-        .json({ error: "Failed to capture payment", details: data });
-    }
+    if (!response.ok) return next(new apiError(`Failed to capture payment : ${data}`, 500));
 
     payment.status = "success";
     payment.transactionReference = data.id || payment.transactionReference;
@@ -274,7 +259,7 @@ const capturePayPalPayment = async (req, res) => {
 
     res.redirect("/success");
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return next(new apiError(`server Error ${err.mesage}`, 500));
   }
 };
 

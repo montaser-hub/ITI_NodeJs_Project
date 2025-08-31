@@ -1,22 +1,24 @@
 import User from "../Models/userModel.js";
-import catchAsync from "../Middelwares/catchAsync.js";
+import catchError from "../Middelwares/catchError.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
+import apiError from "../Utils/apiError.js";
+
 /**** Normal User Functions ****/
-export const getMe = catchAsync(async (req, res, next) => {
+export const getMe = catchError(async (req, res, next) => {
   const currentUserId = req.user.id;
 
-  const user = await findeUserById(currentUserId);
+  const user = await findeUserById(currentUserId, next);
   res.status(200).json({ user });
 });
 
-export const updateMe = catchAsync(async (req, res) => {
+export const updateMe = catchError(async (req, res, next) => {
   const updateFields = {
     name: req.body.name,
     email: req.body.email,
     age: req.body.age,
     photo: req.body.photo,
   };
-  await findeUserById(req.user.id);
+  await findeUserById(req.user.id,next);
   const user = await User.findByIdAndUpdate(req.user.id, updateFields, {
     new: true,
     runValidators: true,
@@ -24,14 +26,14 @@ export const updateMe = catchAsync(async (req, res) => {
   res.status(200).json({ user });
 });
 
-export const deleteMe = catchAsync(async (req, res) => {
-  await findeUserById(req.user.id);
+export const deleteMe = catchError(async (req, res, next) => {
+  await findeUserById(req.user.id,next);
   await User.findByIdAndUpdate(req.user.id, { active: false });
   res.status(204).json({ message: "User deactivated" });
 });
 
 /****Admin Functions******/
-export const getAllUsers = catchAsync(async (req, res) => {
+export const getAllUsers = catchError(async (req, res, next) => {
   const query = req.query;
   const filter = filterQuery(query);
   const { skip, limit } = paginateQuery(query);
@@ -46,18 +48,18 @@ export const getAllUsers = catchAsync(async (req, res) => {
     .json({ total, page: query.page, limit: query.limit, data: users });
 });
 
-export const getUserById = catchAsync(async (req, res) => {
-  const user = await findeUserById(req.params.id);
+export const getUserById = catchError(async (req, res,next) => {
+  const user = await findeUserById(req.params.id,next);
   res.status(200).json({ user });
 });
 
-export const createUser = catchAsync(async (req, res) => {
+export const createUser = catchError(async (req, res,next) => {
   const newUser = await User.create(req.body);
   res.status(201).json({ newUser });
 });
 
-export const updateUser = catchAsync(async (req, res) => {
-  await findeUserById(req.params.id);
+export const updateUser = catchError(async (req, res,next) => {
+  await findeUserById(req.params.id,next);
   const user = await User.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -65,18 +67,16 @@ export const updateUser = catchAsync(async (req, res) => {
   res.status(200).json({ user });
 });
 
-export const deleteUser = catchAsync(async (req, res) => {
-  await findeUserById(req.params.id);
+export const deleteUser = catchError(async (req, res,next) => {
+  await findeUserById(req.params.id,next);
   await User.findByIdAndDelete(req.params.id);
   res.status(204).json({ message: "User deactivated" });
 });
 
-async function findeUserById(id) {
+async function findeUserById(id,next,next) {
   const user = await User.findById(id); //.lean();
   if (!user) {
-    const error = new Error("User not found");
-    error.statusCode = 404;
-    throw error;
+    return next (new apiError("User not found",404))
   }
   return user;
 }
