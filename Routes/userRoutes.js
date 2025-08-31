@@ -26,7 +26,9 @@ import {
   userUpdateSchema,
   userUpdatePassSchema,
 } from "../Utils/Validation/userValidation.js";
+
 const userRouter = express.Router();
+
 /**
  * @swagger
  * tags:
@@ -36,7 +38,31 @@ const userRouter = express.Router();
 
 /**
  * @swagger
- * /signup:
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         email:
+ *           type: string
+ *         age:
+ *           type: number
+ *         photo:
+ *           type: string
+ *         role:
+ *           type: string
+ *           enum: [user, admin]
+ *         active:
+ *           type: boolean
+ */
+
+/**
+ * @swagger
+ * /users/signup:
  *   post:
  *     summary: Register a new user
  *     tags: [Users]
@@ -45,18 +71,7 @@ const userRouter = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
+ *             $ref: '#/components/schemas/User'
  *     responses:
  *       201:
  *         description: User successfully registered
@@ -65,10 +80,16 @@ userRouter.post("/signup", validationMiddleware(userCreateSchema), signup);
 
 /**
  * @swagger
- * /confirm:
+ * /users/confirm/{token}:
  *   put:
  *     summary: Verify user account
  *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         schema:
+ *           type: string
+ *         required: true
  *     responses:
  *       200:
  *         description: Account verified
@@ -77,7 +98,7 @@ userRouter.put("/confirm/:token", verifyAccount);
 
 /**
  * @swagger
- * /signin:
+ * /users/signin:
  *   post:
  *     summary: User login
  *     tags: [Users]
@@ -89,7 +110,7 @@ userRouter.post("/signin", login);
 
 /**
  * @swagger
- * /logout:
+ * /users/logout:
  *   post:
  *     summary: Logout current user
  *     tags: [Users]
@@ -101,7 +122,7 @@ userRouter.post("/logout", logout);
 
 /**
  * @swagger
- * /forgetPassword:
+ * /users/forgetPassword:
  *   post:
  *     summary: Request password reset
  *     tags: [Users]
@@ -113,7 +134,7 @@ userRouter.post("/forgetPassword", forgetPassword);
 
 /**
  * @swagger
- * /resetPassword/{token}:
+ * /users/resetPassword/{token}:
  *   put:
  *     summary: Reset password with token
  *     tags: [Users]
@@ -123,19 +144,15 @@ userRouter.post("/forgetPassword", forgetPassword);
  *         schema:
  *           type: string
  *         required: true
- *         description: Reset token
  *     responses:
  *       200:
  *         description: Password successfully reset
  */
 userRouter.put("/resetPassword/:token", resetPassword);
 
-// Protect all routes after this middleware
-// userRouter.use(protect);
-
 /**
  * @swagger
- * /updateMyPasswrod:
+ * /users/updateMyPassword:
  *   put:
  *     summary: Update current user password
  *     tags: [Users]
@@ -144,7 +161,7 @@ userRouter.put("/resetPassword/:token", resetPassword);
  *         description: Password updated successfully
  */
 userRouter.put(
-  "/updateMyPasswrod",
+  "/updateMyPassword",
   protect,
   validationMiddleware(userUpdatePassSchema),
   updateMyPassword
@@ -152,7 +169,7 @@ userRouter.put(
 
 /**
  * @swagger
- * /me:
+ * /users/me:
  *   get:
  *     summary: Get current logged-in user profile
  *     tags: [Users]
@@ -164,7 +181,7 @@ userRouter.get("/me", protect, getMe);
 
 /**
  * @swagger
- * /updateMy:
+ * /users/updateMe:
  *   put:
  *     summary: Update current user details
  *     tags: [Users]
@@ -181,7 +198,7 @@ userRouter.put(
 
 /**
  * @swagger
- * /deleteMy:
+ * /users/deleteMe:
  *   delete:
  *     summary: Deactivate current user account
  *     tags: [Users]
@@ -190,9 +207,6 @@ userRouter.put(
  *         description: User deactivated
  */
 userRouter.delete("/deleteMe", protect, deleteMe);
-
-// Restrict to admin only
-// userRouter.use(restrictTo("admin"));
 
 /**
  * @swagger
@@ -206,12 +220,18 @@ userRouter.delete("/deleteMe", protect, deleteMe);
  *   post:
  *     summary: Create a new user (Admin only)
  *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
  *     responses:
  *       201:
  *         description: User created
  */
 userRouter
-  .route("/users")
+  .route("/")
   .get(protect, restrictTo("admin"), getAllUsers)
   .post(
     protect,
@@ -243,7 +263,7 @@ userRouter
  *     tags: [Users]
  */
 userRouter
-  .route("/users/:id")
+  .route("/:id")
   .put(
     protect,
     validationMiddleware(userUpdateSchema),
@@ -253,22 +273,4 @@ userRouter
   .get(protect, restrictTo("admin"), getUserById)
   .delete(protect, restrictTo("admin"), deleteUser);
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     User:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *         name:
- *           type: string
- *         email:
- *           type: string
- *         age:
- *           type: number
- *         photo:
- *           type: string
- */
 export default userRouter;
