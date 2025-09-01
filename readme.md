@@ -27,14 +27,22 @@ It follows the **MVC architecture** and includes **JWT authentication**, product
 - Update product quantities
 
 ### 📜 Orders
-- Place an order from the cart
-- View order history
-- Track order status (`pending`, `paid`, `shipped`, `completed`, `cancelled`)
+- Place an order from the cart  
+- View order history (`/orders/myorders`)  
+- View all orders (Admin only)  
+- Get order by ID (`/orders/:id`)  
+- Track order status (`pending`, `paid`, `payment_failed`, `shipped`, `completed`, `cancelled`)  
+- Cancel order (`/orders/:id/cancel`)  
+- Mark order as delivered (Admin only → `/orders/:id/deliver`)  
+
+---
 
 ### 💳 Payments
-- Stripe or PayPal integration
-- Store transaction reference in DB
-- Payment status tracking (`pending`, `success`, `failed`)
+- Stripe or PayPal integration  
+- Create PayPal order (`/payments/paypal/:orderId`)  
+- Handle PayPal webhook (`/payments/paypal/webhook`)  
+- Store transaction reference in DB  
+- Payment status tracking (`pending`, `success`, `failed`, `refunded`)  
 
 ---
 
@@ -143,23 +151,30 @@ The GET /api/categories endpoint supports *filtering, **pagination, and **sortin
 
 ### 📜 Orders
 - `orderId` (PK)  
-- `userId` (FK → Users)  
-- `items` (Array of: productId, quantity, priceAtTime)  
-- `totalAmount`  
-- `status` (`pending`, `paid`, `shipped`, `completed`, `cancelled`)  
-- `paymentId` (FK → Payments)  
+- `user` (FK → Users)  
+- `cartItems` (Array of: `product`, `quantity`, `price`, `color`)  
+- `shippingAddress` (`details`, `street`, `city`)  
+- `shippingPrice`  
+- `totalOrderPrice`  
+- `paymentMethodType` (`card`, `cash`)  
+- `payment` (FK → Payments)  
+- `isPaid` (`Boolean`), `paidAt`  
+- `isCancelled` (`Boolean`), `cancelledAt`  
+- `isDelivered` (`Boolean`), `deliveredAt`  
+- `status` (`pending`, `paid`, `payment_failed`, `shipped`, `completed`, `cancelled`)  
 - `createdAt`, `updatedAt`  
+
+---
 
 ### 💳 Payments
 - `paymentId` (PK)  
 - `orderId` (FK → Orders)  
-- `provider` (`Stripe` | `PayPal`)  
+- `provider` (`stripe`, `paypal`)  
 - `amount`  
-- `currency`  
-- `status` (`pending`, `success`, `failed`)  
+- `currency` (default: `EGP`)  
+- `status` (`pending`, `success`, `failed`, `refunded`)  
 - `transactionReference`  
-- `createdAt`  
-
+- `createdAt`, `updatedAt`  
 ---
 
 ## ⚙️ Tech Stack
@@ -268,6 +283,7 @@ POST /api/payments/paypal
 
 This project is licensed under the MIT License.
 Feel free to use and modify for learning or production.
+
 
 
 
