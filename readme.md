@@ -90,6 +90,8 @@ src/
 ├── server.js
 └── config.env
 
+```
+
 ---
 
 ## 🗄️ Database Design (ERD)
@@ -285,6 +287,7 @@ POST /api/payments/paypal
 
 This project is licensed under the MIT License.
 Feel free to use and modify for learning or production.
+
 
 
 
