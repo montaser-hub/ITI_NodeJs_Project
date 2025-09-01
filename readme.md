@@ -180,7 +180,7 @@ EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-email-password
 
 
-📡 API Endpoints (High Level)
+##📡 API Endpoints (High Level)
 🔑 Auth
 
 POST /api/auth/register
@@ -244,3 +244,4 @@ POST /api/payments/paypal
 
 This project is licensed under the MIT License.
 Feel free to use and modify for learning or production.
+
