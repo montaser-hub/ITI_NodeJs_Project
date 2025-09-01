@@ -46,47 +46,49 @@ It follows the **MVC architecture** and includes **JWT authentication**, product
 
 ---
 
+
 ## 🏗️ Project Architecture (MVC)
+
+```
+
 src/
 ├── Controllers/
-│ ├── categoryController.js
-│ ├── orderController.js
-│ ├── paymentsController.js
-│ ├── productController.js
-│ ├── reviewController.js
-│ └── userController.js
+│   ├── categoryController.js
+│   ├── orderController.js
+│   ├── paymentsController.js
+│   ├── productController.js
+│   ├── reviewController.js
+│   └── userController.js
 │
 ├── Middlewares/
-│ └── auth.js
+│   └── auth.js
 │
 ├── Models/
-│ ├── cartModel.js
-│ ├── categoryModel.js
-│ ├── orderModel.js
-│ ├── paymentsModel.js
-│ ├── productModel.js
-│ └── userModel.js
+│   ├── cartModel.js
+│   ├── categoryModel.js
+│   ├── orderModel.js
+│   ├── paymentsModel.js
+│   ├── productModel.js
+│   └── userModel.js
 │
 ├── Routes/
-│ ├── authRoutes.js
-│ ├── userRoutes.js
-│ ├── productRoutes.js
-│ ├── categoryRoutes.js
-│ ├── cartRoutes.js
-│ ├── orderRoutes.js
-│ └── paymentRoutes.js
+│   ├── authRoutes.js
+│   ├── userRoutes.js
+│   ├── productRoutes.js
+│   ├── categoryRoutes.js
+│   ├── cartRoutes.js
+│   ├── orderRoutes.js
+│   └── paymentRoutes.js
 │
 ├── Utils/
-│ ├── sendEmail.js
-│ ├── pagination.js
-│ ├── jwtHelper.js
-│ └── fileUpload.js
+│   ├── sendEmail.js
+│   ├── pagination.js
+│   ├── jwtHelper.js
+│   └── fileUpload.js
 │
 ├── app.js
 ├── server.js
-├── config.env
-
-
+└── config.env
 
 ---
 
@@ -283,6 +285,7 @@ POST /api/payments/paypal
 
 This project is licensed under the MIT License.
 Feel free to use and modify for learning or production.
+
 
 
 
