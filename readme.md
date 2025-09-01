@@ -105,11 +105,35 @@ src/
 - `images` (URL/path)  
 - `createdAt`, `updatedAt`  
 
-### 🏷️ Categories
-- `categoryId` (PK)  
-- `name`  
-- `description`  
-- `createdAt`, `updatedAt`  
+### Fields
+- *categoryId* (ObjectId, PK) → Unique identifier for the category  
+- *name* (String, required, unique) → Name of the category (e.g., Electronics, Clothing)  
+- *description* (String, optional) → Short description of the category  
+- *createdAt* (Date, auto) → Timestamp when the category was created  
+- *updatedAt* (Date, auto) → Timestamp when the category was last updated  
+
+---
+
+### Rules / Constraints
+- name must be unique (no duplicate categories).  
+- createdAt and updatedAt are automatically handled by the system.  
+
+---
+### 🔎 Query Parameters (GET /api/categories)
+
+The GET /api/categories endpoint supports *filtering, **pagination, and **sorting*.
+
+#### Filtering
+- ?name=Electronics → Get categories with name *"Electronics"*
+
+#### Pagination
+- ?page=2&limit=5 → Get *page 2* with *5 categories per page*
+
+#### Sorting
+- ?sort=name → Sort by name (ascending)  
+- ?sort=-name → Sort by name (descending)  
+- ?sort=-createdAt → Sort by most recent
+-----
 
 ### 🛒 Cart
 - `cartId` (PK)  
@@ -244,6 +268,7 @@ POST /api/payments/paypal
 
 This project is licensed under the MIT License.
 Feel free to use and modify for learning or production.
+
 
 
 
