@@ -12,7 +12,10 @@ const allowedFilterFields = [
   "price",
   "quantity",
   "categoryId",
-  "addedBy"
+  "addedBy",
+  "user",
+  "status",
+  "paymentMethodType"
 ]; // Add valid filter fields
 
 const allowedOperators = ["gte", "gt", "lte", "lt", "in", "ne"];
