@@ -73,13 +73,11 @@ export const login = catchError(async (req, res, next) => {
   const user = await User.findOne({ email }).select("+password"); //to select the password field which has select: false in userModel
   //3) check if user is confirmed
   if (!user || !user?.isConfirmed) {
-    return res.status(403).json({ message: "Please verify your account" });
+    return next( new AppError("Please verify your account", 404));
   }
   //4) check if user is active
   if (!user.active) {
-    return res
-      .status(403)
-      .json({ message: "User is deactivated, please contact support" });
+    return next(new AppError("User is deactivated, please contact support", 403 ));
   }
   //5) check if password is correct by using instance method from userModel
   if (!user || !(await user.correctPassword(password, user.password))) {

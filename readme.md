@@ -27,58 +27,70 @@ It follows the **MVC architecture** and includes **JWT authentication**, product
 - Update product quantities
 
 ### 📜 Orders
-- Place an order from the cart
-- View order history
-- Track order status (`pending`, `paid`, `shipped`, `completed`, `cancelled`)
-
-### 💳 Payments
-- Stripe or PayPal integration
-- Store transaction reference in DB
-- Payment status tracking (`pending`, `success`, `failed`)
+- Place an order from the cart  
+- View order history (`/orders/myorders`)  
+- View all orders (Admin only)  
+- Get order by ID (`/orders/:id`)  
+- Track order status (`pending`, `paid`, `payment_failed`, `shipped`, `completed`, `cancelled`)  
+- Cancel order (`/orders/:id/cancel`)  
+- Mark order as delivered (Admin only → `/orders/:id/deliver`)  
 
 ---
 
+### 💳 Payments
+- Stripe or PayPal integration  
+- Create PayPal order (`/payments/paypal/:orderId`)  
+- Handle PayPal webhook (`/payments/paypal/webhook`)  
+- Store transaction reference in DB  
+- Payment status tracking (`pending`, `success`, `failed`, `refunded`)  
+
+---
+
+
 ## 🏗️ Project Architecture (MVC)
+
+```
+
 src/
 ├── Controllers/
-│ ├── categoryController.js
-│ ├── orderController.js
-│ ├── paymentsController.js
-│ ├── productController.js
-│ ├── reviewController.js
-│ └── userController.js
+│   ├── categoryController.js
+│   ├── orderController.js
+│   ├── paymentsController.js
+│   ├── productController.js
+│   ├── reviewController.js
+│   └── userController.js
 │
 ├── Middlewares/
-│ └── auth.js
+│   └── auth.js
 │
 ├── Models/
-│ ├── cartModel.js
-│ ├── categoryModel.js
-│ ├── orderModel.js
-│ ├── paymentsModel.js
-│ ├── productModel.js
-│ └── userModel.js
+│   ├── cartModel.js
+│   ├── categoryModel.js
+│   ├── orderModel.js
+│   ├── paymentsModel.js
+│   ├── productModel.js
+│   └── userModel.js
 │
 ├── Routes/
-│ ├── authRoutes.js
-│ ├── userRoutes.js
-│ ├── productRoutes.js
-│ ├── categoryRoutes.js
-│ ├── cartRoutes.js
-│ ├── orderRoutes.js
-│ └── paymentRoutes.js
+│   ├── authRoutes.js
+│   ├── userRoutes.js
+│   ├── productRoutes.js
+│   ├── categoryRoutes.js
+│   ├── cartRoutes.js
+│   ├── orderRoutes.js
+│   └── paymentRoutes.js
 │
 ├── Utils/
-│ ├── sendEmail.js
-│ ├── pagination.js
-│ ├── jwtHelper.js
-│ └── fileUpload.js
+│   ├── sendEmail.js
+│   ├── pagination.js
+│   ├── jwtHelper.js
+│   └── fileUpload.js
 │
 ├── app.js
 ├── server.js
-├── config.env
+└── config.env
 
-
+```
 
 ---
 
@@ -102,14 +114,38 @@ src/
 - `price`  
 - `quantity`  
 - `categoryId` (FK → Categories)  
-- `image` (URL/path)  
+- `images` (URL/path)  
 - `createdAt`, `updatedAt`  
 
-### 🏷️ Categories
-- `categoryId` (PK)  
-- `name`  
-- `description`  
-- `createdAt`, `updatedAt`  
+### Fields
+- *categoryId* (ObjectId, PK) → Unique identifier for the category  
+- *name* (String, required, unique) → Name of the category (e.g., Electronics, Clothing)  
+- *description* (String, optional) → Short description of the category  
+- *createdAt* (Date, auto) → Timestamp when the category was created  
+- *updatedAt* (Date, auto) → Timestamp when the category was last updated  
+
+---
+
+### Rules / Constraints
+- name must be unique (no duplicate categories).  
+- createdAt and updatedAt are automatically handled by the system.  
+
+---
+### 🔎 Query Parameters (GET /api/categories)
+
+The GET /api/categories endpoint supports *filtering, **pagination, and **sorting*.
+
+#### Filtering
+- ?name=Electronics → Get categories with name *"Electronics"*
+
+#### Pagination
+- ?page=2&limit=5 → Get *page 2* with *5 categories per page*
+
+#### Sorting
+- ?sort=name → Sort by name (ascending)  
+- ?sort=-name → Sort by name (descending)  
+- ?sort=-createdAt → Sort by most recent
+-----
 
 ### 🛒 Cart
 - `cartId` (PK)  
@@ -119,23 +155,30 @@ src/
 
 ### 📜 Orders
 - `orderId` (PK)  
-- `userId` (FK → Users)  
-- `items` (Array of: productId, quantity, priceAtTime)  
-- `totalAmount`  
-- `status` (`pending`, `paid`, `shipped`, `completed`, `cancelled`)  
-- `paymentId` (FK → Payments)  
+- `user` (FK → Users)  
+- `cartItems` (Array of: `product`, `quantity`, `price`, `color`)  
+- `shippingAddress` (`details`, `street`, `city`)  
+- `shippingPrice`  
+- `totalOrderPrice`  
+- `paymentMethodType` (`card`, `cash`)  
+- `payment` (FK → Payments)  
+- `isPaid` (`Boolean`), `paidAt`  
+- `isCancelled` (`Boolean`), `cancelledAt`  
+- `isDelivered` (`Boolean`), `deliveredAt`  
+- `status` (`pending`, `paid`, `payment_failed`, `shipped`, `completed`, `cancelled`)  
 - `createdAt`, `updatedAt`  
+
+---
 
 ### 💳 Payments
 - `paymentId` (PK)  
 - `orderId` (FK → Orders)  
-- `provider` (`Stripe` | `PayPal`)  
+- `provider` (`stripe`, `paypal`)  
 - `amount`  
-- `currency`  
-- `status` (`pending`, `success`, `failed`)  
+- `currency` (default: `EGP`)  
+- `status` (`pending`, `success`, `failed`, `refunded`)  
 - `transactionReference`  
-- `createdAt`  
-
+- `createdAt`, `updatedAt`  
 ---
 
 ## ⚙️ Tech Stack
@@ -180,7 +223,7 @@ EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-email-password
 
 
-📡 API Endpoints (High Level)
+## 📡 API Endpoints (High Level)
 🔑 Auth
 
 POST /api/auth/register
@@ -244,3 +287,10 @@ POST /api/payments/paypal
 
 This project is licensed under the MIT License.
 Feel free to use and modify for learning or production.
+
+
+
+
+
+
+
