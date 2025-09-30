@@ -56,7 +56,6 @@ export const createCart = catchError(async (req, res, next) => {
 export const getCart = catchError(async (req, res, next) => {
   const cart = await cartModel.findOne({ userId: req.user._id }).populate("items.productId", "name price");
   if (!cart) return next(new AppError("Cart not found",404));
-  if (cart.userId.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to view this cart",403)) 
   res.status(200).json({ message: "Cart retrieved successfully", data: cart });
 });
 
@@ -75,41 +74,51 @@ export const getCarts = catchError(async (req, res, next) => {
 });
 // update Quantity
 export const updateCartItemQuantity = catchError(async (req, res, next) => {
-  const { cartId, productId } = req.params;
+  const { productId } = req.params;
   const { quantity } = req.body;
-  if (!quantity || quantity <= 0) return next(new AppError("Quantity must be greater than 0", 400));
-  const cart = await cartModel.findById(cartId);
+  const cart = await cartModel.findOne({ userId: req.user._id });
   if (!cart) return next(new AppError("Cart not found", 404));
-  if (cart.userId.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to update this cart", 403));
   const item = cart.items.find((i) => i.productId.toString() === productId);
   if (!item) return next(new AppError("Product not found in cart", 404));
   item.quantity = quantity;
   await cart.save();
-  res.status(200).json({message: "Product quantity updated successfully",data: item,});
+  res.status(200).json({
+    message: "Product quantity updated successfully",
+    data: item,
+  });
 });
 // delete item from cart 
 export const removeCartItem = catchError(async (req, res, next) => {
-  const { cartId, productId } = req.params;
-  const cart = await cartModel.findById(cartId);
+  const { productId } = req.params;
+  const cart = await cartModel.findOne({ userId: req.user._id });
   if (!cart) return next(new AppError("Cart not found", 404));
-  if (cart.userId.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to update this cart", 403));
-  const itemIndex = cart.items.findIndex((item) => item.productId.toString() === productId.toString());
+  const itemIndex = cart.items.findIndex(
+    (item) => item.productId.toString() === productId.toString()
+  );
   if (itemIndex === -1) return next(new AppError("Product not found in cart", 404));
   cart.items.splice(itemIndex, 1);
-  if (cart.items.length === 0) {await cart.deleteOne();return res.status(200)
-    .json({message: "Product removed successfully, cart deleted because it was empty",});
+  if (cart.items.length === 0) {
+    await cart.deleteOne();
+    return res.status(200).json({
+      message: "Product removed successfully, cart deleted because it was empty",
+    });
   }
   await cart.save();
-  res.status(200).json({message: "Product removed successfully",items: cart.items,});
+  res.status(200).json({
+    message: "Product removed successfully",
+    items: cart.items,
+  });
 });
+
 // Delete a single cart Of User
 export const deleteCart = catchError(async (req, res, next) => {
-  const { cartId } = req.params;
-  const cart = await cartModel.findById(cartId);
+  const cart = await cartModel.findOne({ userId: req.user._id });
   if (!cart) return next(new AppError("Cart not found", 404));
-  if (cart.userId.toString() !== req.user._id.toString()) return next(new AppError("Not authorized to delete this cart", 403));
-  await cartModel.findByIdAndDelete(cartId);
-  res.status(200).json({message: "Cart Deleted Successfully",data: cart,});
+  await cart.deleteOne();
+  res.status(200).json({
+    message: "Cart Deleted Successfully",
+    data: cart,
+  });
 });
 // Delete all carts In DB
 export const deleteCarts = catchError(async (req, res, next) => {
