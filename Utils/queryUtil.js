@@ -6,6 +6,16 @@ const allowedFilterFields = [
   "isConfirmed",
   "active",
   "role",
+  "userId",
+  "totalPrice",
+  "titleCart",
+  "price",
+  "quantity",
+  "categoryId",
+  "addedBy",
+  "user",
+  "status",
+  "paymentMethodType"
 ]; // Add valid filter fields
 
 const allowedOperators = ["gte", "gt", "lte", "lt", "in", "ne"];

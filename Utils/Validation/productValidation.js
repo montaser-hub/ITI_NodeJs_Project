@@ -38,6 +38,12 @@ const productValidationSchema = Joi.object({
     "any.required": "Images are required",
   }),
 
+  discount: Joi.number().min(0).max(100).optional().messages({
+    "number.min": "Discount must be more than 0",
+    "number.max": "Discount must be less than 100",
+    "number.base": "Discount must be a number",
+    "any.required": "Discount is required",
+  }),
   
 });
 
