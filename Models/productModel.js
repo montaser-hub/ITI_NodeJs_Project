@@ -30,6 +30,11 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
+    discount: {
+      type: Number,
+      min: 0,
+      max: 100,
+    },
     images: {
       type: [String],
       required: true,
