@@ -3,7 +3,7 @@ import AppError from "../Utils/appError.js";
 
 export const addToWishlistHandler = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { items } = req.body;
 
     let wishlist = await Wishlist.findOne({ user: userId });
@@ -35,7 +35,7 @@ export const addToWishlistHandler = async (req, res, next) => {
 
 export const getWishlistHandler = async (req, res, next) => {
   try {
-    const wishlist = await Wishlist.findOne({ user: req.user.id }).populate(
+    const wishlist = await Wishlist.findOne({ user: req.user._id }).populate(
       "items.productId"
     );
 
@@ -55,12 +55,11 @@ export const getWishlistHandler = async (req, res, next) => {
   }
 };
 
-// Remove from wishlist
 export const removeFromWishlistHandler = async (req, res, next) => {
   try {
     const { productId } = req.params;
 
-    const wishlist = await Wishlist.findOne({ user: req.user.id });
+    const wishlist = await Wishlist.findOne({ user: req.user._id });
 
     if (!wishlist) {
       return next(new AppError("Wishlist not found", 404));
