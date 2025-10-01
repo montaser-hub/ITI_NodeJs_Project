@@ -9,7 +9,7 @@ const categoriesRouter = express.Router();
 
 
 
-categoriesRouter.route("/").get(protect, restrictTo("admin"), getCategories).post(protect, restrictTo("admin"), validationMiddleware(categoryValidationSchema),createCategory);
+categoriesRouter.route("/").get(protect, restrictTo("admin", "user"), getCategories).post(protect, restrictTo("admin"), validationMiddleware(categoryValidationSchema),createCategory);
 categoriesRouter.route("/:id").get(protect, restrictTo("admin"), getCategory).put(protect, restrictTo("admin"),validationMiddleware(categoryValidationSchema), updateCategory).delete(protect, restrictTo("admin"), deleteCategory);
 
 export default categoriesRouter;
