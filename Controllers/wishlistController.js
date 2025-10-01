@@ -6,7 +6,7 @@ export const addToWishlistHandler = async (req, res, next) => {
     const userId = req.user._id;
     const { items } = req.body;
     console.log(req.user.id);
-    let wishlist = await Wishlist.findOne({ user: userId });
+    let wishlist = await Wishlist.findOne({ userId });
 
     if (!wishlist) {
       wishlist = await Wishlist.create({
