@@ -6,6 +6,10 @@ const allowedFilterFields = [
   "isConfirmed",
   "active",
   "role",
+  "user",
+  "status",
+  "paymentMethodType",
+  
 ]; // Add valid filter fields
 
 const allowedOperators = ["gte", "gt", "lte", "lt", "in", "ne"];
