@@ -62,19 +62,21 @@ const getMyOrders = catchError(async (req, res, next) => {
   const query = req.query;
   const { skip, limit } = paginateQuery(query);
   const sort = sortQuery(query);
-  const filter = { ...filterQuery(query), user: req.user._id };
+  let filter = { ...filterQuery(query), user: req.user._id };
+
+  if (query.query) {
+    filter["cartItems.product.name"] = { $regex: query.query, $options: "i" };
+  }
 
   const orders = await Order.find(filter)
     .skip(skip)
     .limit(limit)
     .sort(sort)
-    .populate("cartItems.product", "name price");
+    .populate("cartItems.product", "name price images");
 
   const total = await Order.countDocuments(filter);
 
-  res
-    .status(200)
-    .json({ total, page: query.page, limit: query.limit, data: orders });
+  res.status(200).json({ total, page: query.page, limit: query.limit, data: orders });
 });
 
 // @desc    View all orders (Admin)
@@ -90,7 +92,7 @@ const getOrders = catchError(async (req, res, next) => {
     .skip(skip)
     .limit(limit)
     .sort(sort)
-    .populate("cartItems.product", "name price");
+    .populate("cartItems.product", "name price images");
 
   const total = await Order.countDocuments(filter);
 
@@ -108,7 +110,7 @@ const getOrders = catchError(async (req, res, next) => {
 const getOrderById = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id)
     .populate("user", "name email")
-    .populate("cartItems.product", "name price")
+    .populate("cartItems.product", "name price images")
     .populate("payment");
 
   if (order) {
