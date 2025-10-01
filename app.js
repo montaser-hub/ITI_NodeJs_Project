@@ -12,6 +12,7 @@ import productRouter from "./Routes/productRoutes.js";
 import cartRouter from "./Routes/cartRoutes.js";
 import orderRoutes from "./Routes/orderRoutes.js";
 import paymentRoutes from "./Routes/paymentRoutes.js";
+import wishlistRouter from "./Routes/wishlistRoutes.js";
 
 import AppError from "./Utils/appError.js";
 
@@ -45,6 +46,7 @@ app.use("/products", productRouter);
 app.use("/carts", cartRouter);
 app.use("/orders", orderRoutes);
 app.use("/payments", paymentRoutes);
+app.use("/wishlist", wishlistRouter);
 
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
