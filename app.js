@@ -55,13 +55,13 @@ app.get("/api-docs-json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);
 });
-app.get("/payments/cancel", (req, res) => {
-  res.send("CANCELLED payment");
-});
+// app.get("/payments/cancel", (req, res) => {
+//   res.send("CANCELLED payment");
+// });
 
-app.get("/payments/success", (req, res) => {
-  res.send("SUCCESS payment");
-});
+// app.get("/payments/success", (req, res) => {
+//   res.send("SUCCESS payment");
+// });
 
 app.all("/{*any}", (req, res, next) => {
   next(new AppError(`Can not find ${req.originalUrl} on this server`, 404));
