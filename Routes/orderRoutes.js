@@ -7,6 +7,7 @@ import {
   getOrderById,
   updateOrderToDelivered,
   cancelOrder,
+  getOrderByPaypalId,
 } from "../Controllers/orderController.js";
 import { validateOrderSchema } from "../Utils/Validation/orderValidation.js";
 import validationMiddleware from "../Middelwares/validation.js";
@@ -25,5 +26,7 @@ router
   .route("/:id/deliver")
   .put(protect, restrictTo("admin"), updateOrderToDelivered);
 router.route("/:id/cancel").put(protect, cancelOrder);
+
+router.get("/paypal/:paypalOrderId", protect, getOrderByPaypalId);
 
 export default router;

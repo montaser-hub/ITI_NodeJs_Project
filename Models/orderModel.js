@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import ProductModel from "./productModel.js";
-import AppError from "../utils/appError.js"; 
+import AppError from "../utils/appError.js";
 
 const orderSchema = new mongoose.Schema(
   {
@@ -76,6 +76,10 @@ const orderSchema = new mongoose.Schema(
         "cancelled",
       ],
       default: "pending",
+    },
+    paypalOrderId: {
+      type: String,
+      unique: true,
     },
   },
   { timestamps: true, versionKey: false }

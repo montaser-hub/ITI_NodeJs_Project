@@ -1,15 +1,15 @@
 import express from "express";
-import { protect } from "../Controllers/authController.js"; // Assuming this exists
-
+import { protect } from "../Controllers/authController.js";
 import {
   paypalWebhook,
   createPayPalPayment,
+  capturePayPalPayment,
 } from "../Controllers/paymentsController.js";
 
 const router = express.Router();
 
-// PayPal Routes
 router.post("/paypal/webhook", express.json(), paypalWebhook);
 router.post("/paypal/:orderId", protect, createPayPalPayment);
+router.post("/paypal/capture", protect, capturePayPalPayment);
 
 export default router;

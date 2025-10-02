@@ -5,11 +5,7 @@ import Cart from "../Models/cartModel.js";
 import { filterQuery, paginateQuery, sortQuery } from "../Utils/queryUtil.js";
 import AppError from "../Utils/appError.js";
 
-// @desc    Place an order from the user's cart
-// @route   POST /orders
-// @access  Private (User)
 const placeOrder = catchError(async (req, res, next) => {
-  // 1. Get user's cart
   const cart = await Cart.findOne({ userId: req.user._id }).populate(
     "items.productId",
     "price name"
@@ -19,14 +15,12 @@ const placeOrder = catchError(async (req, res, next) => {
     return next(new AppError("Your cart is empty", 400));
   }
 
-  // 2. Snapshot cart items (include price at the moment)
   const snapshotCartItems = cart.items.map((item) => ({
     product: item.productId._id,
     quantity: item.quantity,
     price: item.productId.price,
   }));
 
-  // 3. Calculate total
   const subtotal = snapshotCartItems.reduce(
     (sum, i) => sum + i.price * i.quantity,
     0
@@ -35,7 +29,6 @@ const placeOrder = catchError(async (req, res, next) => {
   const shippingPrice = req.body.shippingPrice || 0;
   const totalOrderPrice = subtotal + shippingPrice;
 
-  // 4. Create order
   const order = new Order({
     user: req.user._id,
     cartItems: snapshotCartItems,
@@ -47,7 +40,6 @@ const placeOrder = catchError(async (req, res, next) => {
 
   const createdOrder = await order.save();
 
-  // 5. Clear cart after placing order
   cart.items = [];
   cart.totalPrice = 0;
   await cart.save();
@@ -55,18 +47,11 @@ const placeOrder = catchError(async (req, res, next) => {
   res.status(201).json(createdOrder);
 });
 
-// @desc    View order history for the user
-// @route   GET /orders/myorders
-// @access  Private (User)
 const getMyOrders = catchError(async (req, res, next) => {
   const query = req.query;
   const { skip, limit } = paginateQuery(query);
   const sort = sortQuery(query);
-  let filter = { ...filterQuery(query), user: req.user._id };
-
-  if (query.query) {
-    filter["cartItems.product.name"] = { $regex: query.query, $options: "i" };
-  }
+  const filter = { ...filterQuery(query), user: req.user._id };
 
   const orders = await Order.find(filter)
     .skip(skip)
@@ -76,12 +61,11 @@ const getMyOrders = catchError(async (req, res, next) => {
 
   const total = await Order.countDocuments(filter);
 
-  res.status(200).json({ total, page: query.page, limit: query.limit, data: orders });
+  res
+    .status(200)
+    .json({ total, page: query.page, limit: query.limit, data: orders });
 });
 
-// @desc    View all orders (Admin)
-// @route   GET /orders
-// @access  Private (Admin)
 const getOrders = catchError(async (req, res, next) => {
   const query = req.query;
   const filter = filterQuery(query);
@@ -104,9 +88,6 @@ const getOrders = catchError(async (req, res, next) => {
   });
 });
 
-// @desc    Get order by ID
-// @route   GET /orders/:id
-// @access  Private (User/Admin)
 const getOrderById = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id)
     .populate("user", "name email")
@@ -120,9 +101,19 @@ const getOrderById = catchError(async (req, res, next) => {
   }
 });
 
-// @desc    Update order to delivered
-// @route   PUT /orders/:id/deliver
-// @access  Private (Admin)
+const getOrderByPaypalId = catchError(async (req, res, next) => {
+  const order = await Order.findOne({ paypalOrderId: req.params.paypalOrderId })
+    .populate("user", "name email")
+    .populate("cartItems.product", "name price images")
+    .populate("payment");
+
+  if (order) {
+    res.json(order);
+  } else {
+    return next(new AppError("Order not found", 404));
+  }
+});
+
 const updateOrderToDelivered = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
 
@@ -140,9 +131,6 @@ const updateOrderToDelivered = catchError(async (req, res, next) => {
   }
 });
 
-// @desc    Cancel an order
-// @route   PUT /orders/:id/cancel
-// @access  Private (User)
 const cancelOrder = catchError(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
 
@@ -180,6 +168,7 @@ export {
   getMyOrders,
   getOrders,
   getOrderById,
+  getOrderByPaypalId,
   updateOrderToDelivered,
   cancelOrder,
 };
