@@ -27,7 +27,7 @@ export const signup = catchError(async (req, res) => {
 
   const verifyURL = `${req.protocol}://${req.get(
     "host"
-  )}/confirm/${verifyToken}`;
+  )}/users/confirm/${verifyToken}`;
   console.log(verifyURL);
   sendEmail(verifyURL, newUser.email);
 

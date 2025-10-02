@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema(
     },
     isConfirmed: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     passwordChangedAt: Date,
     role: {

@@ -12,7 +12,7 @@ const userCreateSchema = Joi.object({
     "string.email": "Email must be a valid email address",
     "string.empty": "Email cannot be empty",
   }),
-  age: Joi.number().required().min(0).max(100),
+  age: Joi.number().optional().min(0).max(100),
   photo: Joi.string().optional(),
   password: Joi.string()
     .min(8)
