@@ -76,7 +76,7 @@ const userRouter = express.Router();
  *       201:
  *         description: User successfully registered
  */
-userRouter.post("/signup", validationMiddleware(userCreateSchema), signup);
+userRouter.post("/signup",  signup);//validationMiddleware(userCreateSchema)
 
 /**
  * @swagger
