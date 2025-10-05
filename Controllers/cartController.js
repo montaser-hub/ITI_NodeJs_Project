@@ -135,7 +135,6 @@ export const removeCartItem = catchError(async (req, res, next) => {
   await cart.save();
   res.status(200).json({
     message: "Product removed successfully",
-    items: cart.items,
   });
 });
 
@@ -145,7 +144,6 @@ export const deleteCart = catchError(async (req, res, next) => {
   await cart.deleteOne();
   res.status(200).json({
     message: "Cart Deleted Successfully",
-    data: cart,
   });
 });
 
