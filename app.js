@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js"; // import configured swagger-jsdoc output
+import cookieParser from "cookie-parser";
 
 import cors from "cors";
 import helmet from "helmet";
@@ -21,7 +22,11 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: ["http://localhost:3001", "http://localhost:5000"],
+    origin: [
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://localhost:5000",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
