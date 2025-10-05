@@ -6,7 +6,7 @@ import swaggerSpec from "./swagger.js"; // import configured swagger-jsdoc outpu
 import cors from "cors";
 import helmet from "helmet";
 import hpp from "hpp";
-import userRoutes from "./routes/userRoutes.js";
+import userRoutes from "./Routes/userRoutes.js";
 import categoriesRouter from "./Routes/categoryRoutes.js";
 import productRouter from "./Routes/productRoutes.js";
 import cartRouter from "./Routes/cartRoutes.js";
