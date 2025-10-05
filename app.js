@@ -20,6 +20,16 @@ import AppError from "./Utils/appError.js";
 import globalErrorHandler from "./Controllers/errorController.js";
 const app = express();
 app.use(helmet());
+
+app.use(hpp());
+// logging middleware in development environment
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+}
+// parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
+
+app.use(express.json());
+
 app.use(
   cors({
     origin: [
@@ -32,14 +42,7 @@ app.use(
   })
 );
 
-app.use(hpp());
-// logging middleware in development environment
-if (process.env.NODE_ENV === "development") {
-  app.use(morgan("dev"));
-}
-// parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
-
-app.use(express.json());
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("Welcome to my API");
