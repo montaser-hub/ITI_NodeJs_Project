@@ -89,14 +89,12 @@ export const getCarts = catchError(async (req, res, next) => {
   if (!carts || carts.length === 0)
     return next(new AppError("No carts found", 404));
   const total = await cartModel.countDocuments(filter);
-  res
-    .status(200)
-    .json({
-      total,
-      page: query.page || 1,
-      limit: query.limit || 2,
-      data: carts,
-    });
+  res.status(200).json({
+    total,
+    page: query.page || 1,
+    limit: query.limit || 2,
+    data: carts,
+  });
 });
 
 export const updateCartItemQuantity = catchError(async (req, res, next) => {
@@ -137,7 +135,6 @@ export const removeCartItem = catchError(async (req, res, next) => {
   await cart.save();
   res.status(200).json({
     message: "Product removed successfully",
-    items: cart.items,
   });
 });
 
@@ -147,7 +144,6 @@ export const deleteCart = catchError(async (req, res, next) => {
   await cart.deleteOne();
   res.status(200).json({
     message: "Cart Deleted Successfully",
-    data: cart,
   });
 });
 
@@ -157,6 +153,5 @@ export const deleteCarts = catchError(async (req, res, next) => {
     return next(new AppError("No carts found to delete", 404));
   res.status(200).json({
     message: "All carts in the database deleted successfully",
-    deletedCount: result.deletedCount,
   });
 });
