@@ -28,7 +28,7 @@ export const signup = catchError(async (req, res) => {
   const verifyURL = `${req.protocol}://${req.get(
     "host"
   )}/users/confirm/${verifyToken}`;
-  console.log(verifyURL);
+  // console.log(verifyURL);
   sendEmail(verifyURL, newUser.email);
 
   res.status(201).json({
@@ -73,11 +73,13 @@ export const login = catchError(async (req, res, next) => {
   const user = await User.findOne({ email }).select("+password"); //to select the password field which has select: false in userModel
   //3) check if user is confirmed
   if (!user || !user?.isConfirmed) {
-    return next( new AppError("Please verify your account", 404));
+    return next(new AppError("Please verify your account", 404));
   }
   //4) check if user is active
   if (!user.active) {
-    return next(new AppError("User is deactivated, please contact support", 403 ));
+    return next(
+      new AppError("User is deactivated, please contact support", 403)
+    );
   }
   //5) check if password is correct by using instance method from userModel
   if (!user || !(await user.correctPassword(password, user.password))) {
@@ -86,37 +88,42 @@ export const login = catchError(async (req, res, next) => {
 
   //6) If everything ok, send token to client
   const token = signToken(user._id);
+  // console.log("Generated Token:", token);
 
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+
+  // console.log("Set-Cookie Header:", res.get("Set-Cookie"));
   res.status(200).json({
-    status: "success",
+    status: "Login successful",
     token,
   });
 });
 
 export const logout = (req, res) => {
-  //add below for production with https
-  //res.cookie("jwt", "loggedout", {
-  // httpOnly: true,
-  // expires: new Date(Date.now() + 1 * 1000), // expires instantly
-  //});
-  // add this code to work with pot man test in logout route
-  /*
-    if (pm.response.json().clearToken) {
-    pm.environment.unset("token");
-    } 
-    */
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
 
   res.status(200).json({
     status: "success",
     message: "You have been logged out successfully",
-    clearToken: true,
   });
 };
 
 export const protect = catchError(async (req, res, next) => {
   //1) Getting token and check if it's there
   let token;
-  if (
+  if (req.cookies && (req.cookies.token || req.cookies.Token)) {
+    token = req.cookies.token || req.cookies.Token;
+    // console.log("Token from cookie:", token);
+  } else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {

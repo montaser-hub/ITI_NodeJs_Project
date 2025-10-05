@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js"; // import configured swagger-jsdoc output
+import cookieParser from "cookie-parser";
 
 import cors from "cors";
 import helmet from "helmet";
@@ -19,13 +20,6 @@ import AppError from "./Utils/appError.js";
 import globalErrorHandler from "./Controllers/errorController.js";
 const app = express();
 app.use(helmet());
-app.use(
-  cors({
-    origin: ["http://localhost:3001", "http://localhost:5000"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  })
-);
 
 app.use(hpp());
 // logging middleware in development environment
@@ -35,6 +29,20 @@ if (process.env.NODE_ENV === "development") {
 // parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
 
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://localhost:5000",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("Welcome to my API");

@@ -84,7 +84,7 @@ export const createPayPalPayment = catchError(async (req, res, next) => {
           },
         ],
         application_context: {
-          return_url: `${process.env.FRONTEND}/payments/checkout`,
+          return_url: `${process.env.FRONTEND}/order-confirmation/:${order._id}`,
           cancel_url: `${process.env.FRONTEND}/payments/cancel`,
         },
       }),
@@ -125,7 +125,10 @@ export const capturePayPalPayment = catchError(async (req, res, next) => {
     return next(new AppError("Order not found", 404));
   }
 
+  console.log(`Processing capture for order ${order._id} with token ${token}`);
+
   if (order.isPaid) {
+    console.log(`Order ${order._id} already paid`);
     return res.status(200).json({ status: "success", orderId: order._id });
   }
 
@@ -149,6 +152,7 @@ export const capturePayPalPayment = catchError(async (req, res, next) => {
 
   const data = await response.json();
   if (!response.ok) {
+    console.error("PayPal Capture Error:", data);
     return next(
       new AppError(
         `Failed to capture PayPal payment: ${data.error || "Unknown error"}`,
@@ -180,6 +184,7 @@ export const capturePayPalPayment = catchError(async (req, res, next) => {
   order.status = "paid";
   await order.save();
 
+  console.log(`Payment captured successfully for order ${order._id}`);
   res.status(200).json({ status: "success", orderId: order._id });
 });
 
