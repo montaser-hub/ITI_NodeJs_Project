@@ -98,6 +98,7 @@ export const login = catchError(async (req, res, next) => {
 
   res.status(200).json({
     status: "Login successful",
+    token
   });
 });
 
@@ -117,14 +118,19 @@ export const logout = (req, res) => {
 export const protect = catchError(async (req, res, next) => {
   //1) Getting token and check if it's there
   let token;
-  if (req.cookies && req.cookies.token) {
-    token = req.cookies.token;
+  if (req.cookies && (req.cookies.token || req.cookies.Token)) {
+    token = req.cookies.token || req.cookies.Token;
+    console.log("Token from cookie:", token, req.cookies.Token);
   } else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
+    console.log("Token from header:", token);
   }
+
+  console.log("Token from header:", token);
+
   if (!token) {
     return next(
       new AppError("You are not logged in! Please log in to get access.", 401)

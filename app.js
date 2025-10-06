@@ -38,7 +38,7 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 // parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
-
+app.use(cookieParser());
 app.use(express.json());
 
 app.get("/", (req, res) => {
