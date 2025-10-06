@@ -28,7 +28,7 @@ export const signup = catchError(async (req, res) => {
   const verifyURL = `${req.protocol}://${req.get(
     "host"
   )}/users/confirm/${verifyToken}`;
-  console.log(verifyURL);
+  // console.log(verifyURL);
   sendEmail(verifyURL, newUser.email);
 
   res.status(201).json({
@@ -88,14 +88,16 @@ export const login = catchError(async (req, res, next) => {
 
   //6) If everything ok, send token to client
   const token = signToken(user._id);
+  // console.log("Generated Token:", token);
 
   res.cookie("token", token, {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
-    maxAge: 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 24 * 60 * 60 * 1000,
   });
 
+  // console.log("Set-Cookie Header:", res.get("Set-Cookie"));
   res.status(200).json({
     status: "Login successful",
     token
@@ -120,16 +122,14 @@ export const protect = catchError(async (req, res, next) => {
   let token;
   if (req.cookies && (req.cookies.token || req.cookies.Token)) {
     token = req.cookies.token || req.cookies.Token;
-    console.log("Token from cookie:", token, req.cookies.Token);
+
   } else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1];
-    console.log("Token from header:", token);
   }
 
-  console.log("Token from header:", token);
 
   if (!token) {
     return next(

@@ -7,7 +7,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
 import hpp from "hpp";
-import userRoutes from "./routes/userRoutes.js";
+import userRoutes from "./Routes/userRoutes.js";
 import categoriesRouter from "./Routes/categoryRoutes.js";
 import productRouter from "./Routes/productRoutes.js";
 import cartRouter from "./Routes/cartRoutes.js";
@@ -20,6 +20,16 @@ import AppError from "./Utils/appError.js";
 import globalErrorHandler from "./Controllers/errorController.js";
 const app = express();
 app.use(helmet());
+
+app.use(hpp());
+// logging middleware in development environment
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+}
+// parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
+
+app.use(express.json());
+
 app.use(
   cors({
     origin: [
@@ -40,6 +50,7 @@ if (process.env.NODE_ENV === "development") {
 // parse JSON request bodies for POST, PUT and PATCH requests(reading data from body into req.body)
 app.use(cookieParser());
 app.use(express.json());
+
 
 app.get("/", (req, res) => {
   res.send("Welcome to my API");
