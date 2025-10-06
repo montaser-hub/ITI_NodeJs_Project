@@ -333,3 +333,44 @@ export const updateMyPassword = catchError(async (req, res, next) => {
     token,
   });
 });
+
+
+
+
+/**
+ * 🔒 Controller: checkAuth
+ * -----------------------------------------
+ * Description:
+ * Used to verify if the user is currently authenticated.
+ * Checks for a valid JWT token in cookies, verifies it,
+ * and returns the decoded user info if valid.
+ *
+ * Workflow:
+ * 1️⃣ Extract the token from cookies.
+ * 2️⃣ If no token → return 401 (Not authenticated).
+ * 3️⃣ Verify the token using JWT_SECRET.
+ * 4️⃣ If valid → return user data + authenticated: true.
+ * 5️⃣ If invalid/expired → return 401 (Invalid token).
+ */
+export const checkAuth = catchError(async (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return next(new AppError("Not authenticated", 401));
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("name email role");
+
+    if (!user) return next(new AppError("User not found", 404));
+
+    res.status(200).json({
+      status: "success",
+      authenticated: true,
+      user,
+    });
+  } catch (err) {
+    return next(new AppError("Invalid or expired token", 401));
+  }
+});

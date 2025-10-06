@@ -9,6 +9,7 @@ import {
   resetPassword,
   updateMyPassword,
   logout,
+  checkAuth
 } from "../Controllers/authController.js";
 import {
   getMe,
@@ -28,6 +29,8 @@ import {
 } from "../Utils/Validation/userValidation.js";
 
 const userRouter = express.Router();
+userRouter.get("/check", checkAuth);
+
 
 /**
  * @swagger
@@ -76,7 +79,7 @@ const userRouter = express.Router();
  *       201:
  *         description: User successfully registered
  */
-userRouter.post("/signup",  signup);//validationMiddleware(userCreateSchema)
+userRouter.post("/signup", signup);//validationMiddleware(userCreateSchema)
 
 /**
  * @swagger
@@ -272,5 +275,6 @@ userRouter
   )
   .get(protect, restrictTo("admin"), getUserById)
   .delete(protect, restrictTo("admin"), deleteUser);
+
 
 export default userRouter;
